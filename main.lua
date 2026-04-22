@@ -1,5 +1,4 @@
 
-
 local a, b = {
     {
         1,
@@ -13,13 +12,6 @@ local a, b = {
                 'ModuleScript',
                 {
                     'Creator',
-                },
-            },
-            {
-                28,
-                'ModuleScript',
-                {
-                    'Icons',
                 },
             },
             {
@@ -37,10 +29,38 @@ local a, b = {
                         },
                     },
                     {
+                        52,
+                        'ModuleScript',
+                        {
+                            'Light',
+                        },
+                    },
+                    {
                         51,
                         'ModuleScript',
                         {
                             'Darker',
+                        },
+                    },
+                    {
+                        53,
+                        'ModuleScript',
+                        {
+                            'Rose',
+                        },
+                    },
+                    {
+                        49,
+                        'ModuleScript',
+                        {
+                            'Aqua',
+                        },
+                    },
+                    {
+                        48,
+                        'ModuleScript',
+                        {
+                            'Amethyst',
                         },
                     },
                 },
@@ -125,6 +145,13 @@ local a, b = {
                                 },
                             },
                             {
+                                46,
+                                'ModuleScript',
+                                {
+                                    'isMotor.spec',
+                                },
+                            },
+                            {
                                 39,
                                 'ModuleScript',
                                 {
@@ -132,10 +159,45 @@ local a, b = {
                                 },
                             },
                             {
+                                40,
+                                'ModuleScript',
+                                {
+                                    'Signal.spec',
+                                },
+                            },
+                            {
                                 45,
                                 'ModuleScript',
                                 {
                                     'isMotor',
+                                },
+                            },
+                            {
+                                36,
+                                'ModuleScript',
+                                {
+                                    'Instant.spec',
+                                },
+                            },
+                            {
+                                44,
+                                'ModuleScript',
+                                {
+                                    'Spring.spec',
+                                },
+                            },
+                            {
+                                42,
+                                'ModuleScript',
+                                {
+                                    'SingleMotor.spec',
+                                },
+                            },
+                            {
+                                38,
+                                'ModuleScript',
+                                {
+                                    'Linear.spec',
                                 },
                             },
                             {
@@ -160,10 +222,31 @@ local a, b = {
                                 },
                             },
                             {
+                                37,
+                                'ModuleScript',
+                                {
+                                    'Linear',
+                                },
+                            },
+                            {
                                 41,
                                 'ModuleScript',
                                 {
                                     'SingleMotor',
+                                },
+                            },
+                            {
+                                34,
+                                'ModuleScript',
+                                {
+                                    'GroupMotor.spec',
+                                },
+                            },
+                            {
+                                32,
+                                'ModuleScript',
+                                {
+                                    'BaseMotor.spec',
                                 },
                             },
                         },
@@ -375,13 +458,6 @@ local aa = {
 
             return z:find'%.' and tonumber(z:sub(1, z:find'%.' + A)) or z
         end
-
-        local y = e(o.Icons).assets
-
-        function x.GetIcon(z, A)
-            if A ~= nil and y['lucide-' .. A] then
-                return y['lucide-' .. A]
-            end
 
             return nil
         end
@@ -1985,9 +2061,6 @@ local aa = {
                 Type = 'Tab',
             }
 
-            if t:GetIcon(r) then
-                r = t:GetIcon(r)
-            end
             if r == '' or nil then
                 r = nil
             end
@@ -2042,12 +2115,12 @@ local aa = {
                 BackgroundTransparency = 1,
                 Parent = u.ContainerHolder,
                 Visible = false,
-                BottomImage = 'rbxassetid://6889812791',
-                MidImage = 'rbxassetid://6889812721',
-                TopImage = 'rbxassetid://6276641225',
+                BottomImage = '',
+                MidImage = '',
+                TopImage = '',
                 ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageTransparency = 0.95,
-                ScrollBarThickness = 3,
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
                 BorderSizePixel = 0,
                 CanvasSize = UDim2.fromScale(0, 0),
                 ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -3062,12 +3135,12 @@ local aa = {
                 Size = UDim2.new(1, -5, 1, -10),
                 Position = UDim2.fromOffset(5, 5),
                 BackgroundTransparency = 1,
-                BottomImage = 'rbxassetid://6889812791',
-                MidImage = 'rbxassetid://6889812721',
-                TopImage = 'rbxassetid://6276641225',
+                BottomImage = '',
+                MidImage = '',
+                TopImage = '',
                 ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageTransparency = 0.95,
-                ScrollBarThickness = 4,
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
                 BorderSizePixel = 0,
                 CanvasSize = UDim2.fromScale(0, 0),
             }, {s})
@@ -3990,9 +4063,6 @@ local aa = {
 
         return c
     end,
-    [28] = function()
-        return { assets = {} }
-    end,
     [30] = function()
         local aa, ab, ac, ad, ae = b(30)
         local af = {
@@ -4053,6 +4123,43 @@ local aa = {
         end
 
         return ai
+    end,
+    [32] = function()
+        local aa, ab, ac, ad, ae = b(32)
+
+        return function()
+            local af, ag = game:GetService'RunService', ac(ab.Parent.BaseMotor)
+
+            describe('connection management', function()
+                local ah = ag.new()
+
+                it('should hook up connections on :start()', function()
+                    ah:start()
+                    expect(typeof(ah._connection)).to.equal'RBXScriptConnection'
+                end)
+                it('should remove connections on :stop() or :destroy()', function()
+                    ah:stop()
+                    expect(ah._connection).to.equal(nil)
+                end)
+            end)
+            it('should call :step() with deltaTime', function()
+                local ah, ai = (ag.new())
+
+                function ah.step(aj, ...)
+                    ai = {...}
+
+                    ah:stop()
+                end
+
+                ah:start()
+
+                local aj = af.RenderStepped:Wait()
+
+                af.RenderStepped:Wait()
+                expect(ai).to.be.ok()
+                expect(ai[1]).to.equal(aj)
+            end)
+        end
     end,
     [33] = function()
         local aa, ab, ac, ad, ae = b(33)
@@ -4160,6 +4267,77 @@ local aa = {
 
         return ai
     end,
+    [34] = function()
+        local aa, ab, ac, ad, ae = b(34)
+
+        return function()
+            local af, ag, ah = ac(ab.Parent.GroupMotor), ac(ab.Parent.Instant), ac(ab.Parent.Spring)
+
+            it('should complete when all child motors are complete', function()
+                local ai = af.new({
+                    A = 1,
+                    B = 2,
+                }, false)
+
+                expect(ai._complete).to.equal(true)
+                ai:setGoal{
+                    A = ag.new(3),
+                    B = ah.new(4, {
+                        frequency = 7.5,
+                        dampingRatio = 1,
+                    }),
+                }
+                expect(ai._complete).to.equal(false)
+                ai:step(1.6666666666666665E-2)
+                expect(ai._complete).to.equal(false)
+
+                for aj = 1, 30 do
+                    ai:step(1.6666666666666665E-2)
+                end
+
+                expect(ai._complete).to.equal(true)
+            end)
+            it('should start when the goal is set', function()
+                local ai, aj = af.new({A = 0}, false), false
+
+                ai:onStart(function()
+                    aj = not aj
+                end)
+                ai:setGoal{
+                    A = ag.new(1),
+                }
+                expect(aj).to.equal(true)
+                ai:setGoal{
+                    A = ag.new(1),
+                }
+                expect(aj).to.equal(false)
+            end)
+            it('should properly return all values', function()
+                local ai = af.new({
+                    A = 1,
+                    B = 2,
+                }, false)
+                local aj = ai:getValue()
+
+                expect(aj.A).to.equal(1)
+                expect(aj.B).to.equal(2)
+            end)
+            it('should error when a goal is given to GroupMotor.new', function()
+                local ai = pcall(function()
+                    af.new(ag.new(0))
+                end)
+
+                expect(ai).to.equal(false)
+            end)
+            it('should error when a single goal is provided to GroupMotor:step', function()
+                local ai = pcall(function()
+                    af.new{a = 1}:setGoal(ag.new(0))
+                end)
+
+                expect(ai).to.equal(false)
+            end)
+        end
+    end,
     [35] = function()
         local aa, ab, ac, ad, ae = b(35)
         local af = {}
@@ -4177,6 +4355,114 @@ local aa = {
         end
 
         return af
+    end,
+    [36] = function()
+        local aa, ab, ac, ad, ae = b(36)
+
+        return function()
+            local af = ac(ab.Parent.Instant)
+
+            it('should return a completed state with the provided value', function()
+                local ag = af.new(1.23)
+                local ah = ag:step(0.1, {
+                    value = 0,
+                    complete = false,
+                })
+
+                expect(ah.complete).to.equal(true)
+                expect(ah.value).to.equal(1.23)
+            end)
+        end
+    end,
+    [37] = function()
+        local aa, ab, ac, ad, ae = b(37)
+        local af = {}
+
+        af.__index = af
+
+        function af.new(ag, ah)
+            assert(ag, 'Missing argument #1: targetValue')
+
+            ah = ah or {}
+
+            return setmetatable({
+                _targetValue = ag,
+                _velocity = ah.velocity or 1,
+            }, af)
+        end
+        function af.step(ag, ah, ai)
+            local aj, c, d = ah.value, ag._velocity, ag._targetValue
+            local e = ai * c
+            local f = e >= math.abs(d - aj)
+
+            aj = aj + e * (d > aj and 1 or -1)
+
+            if f then
+                aj = ag._targetValue
+                c = 0
+            end
+
+            return {
+                complete = f,
+                value = aj,
+                velocity = c,
+            }
+        end
+
+        return af
+    end,
+    [38] = function()
+        local aa, ab, ac, ad, ae = b(38)
+
+        return function()
+            local af, ag = ac(ab.Parent.SingleMotor), ac(ab.Parent.Linear)
+
+            describe('completed state', function()
+                local ah, ai = af.new(0, false), ag.new(1, {velocity = 1})
+
+                ah:setGoal(ai)
+
+                for aj = 1, 60 do
+                    ah:step(1.6666666666666665E-2)
+                end
+
+                it('should complete', function()
+                    expect(ah._state.complete).to.equal(true)
+                end)
+                it('should be exactly the goal value when completed', function()
+                    expect(ah._state.value).to.equal(1)
+                end)
+            end)
+            describe('uncompleted state', function()
+                local ah, ai = af.new(0, false), ag.new(1, {velocity = 1})
+
+                ah:setGoal(ai)
+
+                for aj = 1, 59 do
+                    ah:step(1.6666666666666665E-2)
+                end
+
+                it('should be uncomplete', function()
+                    expect(ah._state.complete).to.equal(false)
+                end)
+            end)
+            describe('negative velocity', function()
+                local ah, ai = af.new(1, false), ag.new(0, {velocity = 1})
+
+                ah:setGoal(ai)
+
+                for aj = 1, 60 do
+                    ah:step(1.6666666666666665E-2)
+                end
+
+                it('should complete', function()
+                    expect(ah._state.complete).to.equal(true)
+                end)
+                it('should be exactly the goal value when completed', function()
+                    expect(ah._state.value).to.equal(0)
+                end)
+            end)
+        end
     end,
     [39] = function()
         local aa, ab, ac, ad, ae = b(39)
@@ -4239,6 +4525,49 @@ local aa = {
         end
 
         return ag
+    end,
+    [40] = function()
+        local aa, ab, ac, ad, ae = b(40)
+
+        return function()
+            local af = ac(ab.Parent.Signal)
+
+            it('should invoke all connections, instantly', function()
+                local ag, ah, aj = (af.new())
+
+                ag:connect(function(c)
+                    ah = c
+                end)
+                ag:connect(function(c)
+                    aj = c
+                end)
+                ag:fire'hello'
+                expect(ah).to.equal'hello'
+                expect(aj).to.equal'hello'
+            end)
+            it('should return values when :wait() is called', function()
+                local ag = af.new()
+
+                spawn(function()
+                    ag:fire(123, 'hello')
+                end)
+
+                local ah, aj = ag:wait()
+
+                expect(ah).to.equal(123)
+                expect(aj).to.equal'hello'
+            end)
+            it('should properly handle disconnections', function()
+                local ag, ah = af.new(), false
+                local aj = ag:connect(function()
+                    ah = true
+                end)
+
+                aj:disconnect()
+                ag:fire()
+                expect(ah).to.equal(false)
+            end)
+        end
     end,
     [41] = function()
         local aa, ab, ac, ad, ae = b(41)
@@ -4306,6 +4635,43 @@ local aa = {
         end
 
         return ag
+    end,
+    [42] = function()
+        local aa, ab, ac, ad, ae = b(42)
+
+        return function()
+            local af, ag = ac(ab.Parent.SingleMotor), ac(ab.Parent.Instant)
+
+            it('should assign new state on step', function()
+                local ah = af.new(0, false)
+
+                ah:setGoal(ag.new(5))
+                ah:step(1.6666666666666665E-2)
+                expect(ah._state.complete).to.equal(true)
+                expect(ah._state.value).to.equal(5)
+            end)
+            it('should invoke onComplete listeners when the goal is completed', function()
+                local ah, aj = af.new(0, false), false
+
+                ah:onComplete(function()
+                    aj = true
+                end)
+                ah:setGoal(ag.new(5))
+                ah:step(1.6666666666666665E-2)
+                expect(aj).to.equal(true)
+            end)
+            it('should start when the goal is set', function()
+                local ah, aj = af.new(0, false), false
+
+                ah:onStart(function()
+                    aj = not aj
+                end)
+                ah:setGoal(ag.new(5))
+                expect(aj).to.equal(true)
+                ah:setGoal(ag.new(5))
+                expect(aj).to.equal(false)
+            end)
+        end
     end,
     [43] = function()
         local aa, ab, ac, ad, ae = b(43)
@@ -4377,6 +4743,51 @@ local aa = {
 
         return aj
     end,
+    [44] = function()
+        local aa, ab, ac, ad, ae = b(44)
+
+        return function()
+            local af, ag = ac(ab.Parent.SingleMotor), ac(ab.Parent.Spring)
+
+            describe('completed state', function()
+                local ah, aj = af.new(0, false), ag.new(1, {
+                    frequency = 2,
+                    dampingRatio = 0.75,
+                })
+
+                ah:setGoal(aj)
+
+                for c = 1, 100 do
+                    ah:step(1.6666666666666665E-2)
+                end
+
+                it('should complete', function()
+                    expect(ah._state.complete).to.equal(true)
+                end)
+                it('should be exactly the goal value when completed', function()
+                    expect(ah._state.value).to.equal(1)
+                end)
+            end)
+            it('should inherit velocity', function()
+                local ah = af.new(0, false)
+
+                ah._state = {
+                    complete = false,
+                    value = 0,
+                    velocity = -5,
+                }
+
+                local aj = ag.new(1, {
+                    frequency = 2,
+                    dampingRatio = 1,
+                })
+
+                ah:setGoal(aj)
+                ah:step(1.6666666666666665E-2)
+                expect(ah._state.velocity < 0).to.equal(true)
+            end)
+        end
+    end,
     [45] = function()
         local aa, ab, ac, ad, ae = b(45)
         local af = function(af)
@@ -4391,12 +4802,39 @@ local aa = {
 
         return af
     end,
+    [46] = function()
+        local aa, ab, ac, ad, ae = b(46)
+
+        return function()
+            local af, ag, ah = ac(ab.Parent.isMotor), ac(ab.Parent.SingleMotor), ac(ab.Parent.GroupMotor)
+            local aj, c = ag.new(0), ah.new{}
+
+            it('should properly detect motors', function()
+                expect(af(aj)).to.equal(true)
+                expect(af(c)).to.equal(true)
+            end)
+            it("shouldn't detect things that aren't motors", function()
+                expect(af{}).to.equal(false)
+            end)
+            it('should return the proper motor type', function()
+                local d, e = af(aj)
+                local f, g = af(c)
+
+                expect(e).to.equal'Single'
+                expect(g).to.equal'Group'
+            end)
+        end
+    end,
     [47] = function()
         local aa, ab, ac, ad, ae = b(47)
         local af = {
             Names = {
                 'Dark',
                 'Darker',
+                'Light',
+                'Aqua',
+                'Amethyst',
+                'Rose',
             },
         }
 
@@ -4407,6 +4845,88 @@ local aa = {
         end
 
         return af
+    end,
+    [48] = function()
+        local aa, ab, ac, ad, ae = b(48)
+
+        return {
+            Name = 'Amethyst',
+            Accent = Color3.fromRGB(97, 62, 167),
+            AcrylicMain = Color3.fromRGB(20, 20, 20),
+            AcrylicBorder = Color3.fromRGB(110, 90, 130),
+            AcrylicGradient = ColorSequence.new(Color3.fromRGB(85, 57, 139), Color3.fromRGB(40, 25, 65)),
+            AcrylicNoise = 0.92,
+            TitleBarLine = Color3.fromRGB(95, 75, 110),
+            Tab = Color3.fromRGB(160, 140, 180),
+            Element = Color3.fromRGB(140, 120, 160),
+            ElementBorder = Color3.fromRGB(60, 50, 70),
+            InElementBorder = Color3.fromRGB(100, 90, 110),
+            ElementTransparency = 0.87,
+            ToggleSlider = Color3.fromRGB(140, 120, 160),
+            ToggleToggled = Color3.fromRGB(0, 0, 0),
+            SliderRail = Color3.fromRGB(140, 120, 160),
+            DropdownFrame = Color3.fromRGB(170, 160, 200),
+            DropdownHolder = Color3.fromRGB(60, 45, 80),
+            DropdownBorder = Color3.fromRGB(50, 40, 65),
+            DropdownOption = Color3.fromRGB(140, 120, 160),
+            Keybind = Color3.fromRGB(140, 120, 160),
+            Input = Color3.fromRGB(140, 120, 160),
+            InputFocused = Color3.fromRGB(20, 10, 30),
+            InputIndicator = Color3.fromRGB(170, 150, 190),
+            Dialog = Color3.fromRGB(60, 45, 80),
+            DialogHolder = Color3.fromRGB(45, 30, 65),
+            DialogHolderLine = Color3.fromRGB(40, 25, 60),
+            DialogButton = Color3.fromRGB(60, 45, 80),
+            DialogButtonBorder = Color3.fromRGB(95, 80, 110),
+            DialogBorder = Color3.fromRGB(85, 70, 100),
+            DialogInput = Color3.fromRGB(70, 55, 85),
+            DialogInputLine = Color3.fromRGB(175, 160, 190),
+            Text = Color3.fromRGB(240, 240, 240),
+            SubText = Color3.fromRGB(170, 170, 170),
+            Hover = Color3.fromRGB(140, 120, 160),
+            HoverChange = 0.04,
+        }
+    end,
+    [49] = function()
+        local aa, ab, ac, ad, ae = b(49)
+
+        return {
+            Name = 'Aqua',
+            Accent = Color3.fromRGB(60, 165, 165),
+            AcrylicMain = Color3.fromRGB(20, 20, 20),
+            AcrylicBorder = Color3.fromRGB(50, 100, 100),
+            AcrylicGradient = ColorSequence.new(Color3.fromRGB(60, 140, 140), Color3.fromRGB(40, 80, 80)),
+            AcrylicNoise = 0.92,
+            TitleBarLine = Color3.fromRGB(60, 120, 120),
+            Tab = Color3.fromRGB(140, 180, 180),
+            Element = Color3.fromRGB(110, 160, 160),
+            ElementBorder = Color3.fromRGB(40, 70, 70),
+            InElementBorder = Color3.fromRGB(80, 110, 110),
+            ElementTransparency = 0.84,
+            ToggleSlider = Color3.fromRGB(110, 160, 160),
+            ToggleToggled = Color3.fromRGB(0, 0, 0),
+            SliderRail = Color3.fromRGB(110, 160, 160),
+            DropdownFrame = Color3.fromRGB(160, 200, 200),
+            DropdownHolder = Color3.fromRGB(40, 80, 80),
+            DropdownBorder = Color3.fromRGB(40, 65, 65),
+            DropdownOption = Color3.fromRGB(110, 160, 160),
+            Keybind = Color3.fromRGB(110, 160, 160),
+            Input = Color3.fromRGB(110, 160, 160),
+            InputFocused = Color3.fromRGB(20, 10, 30),
+            InputIndicator = Color3.fromRGB(130, 170, 170),
+            Dialog = Color3.fromRGB(40, 80, 80),
+            DialogHolder = Color3.fromRGB(30, 60, 60),
+            DialogHolderLine = Color3.fromRGB(25, 50, 50),
+            DialogButton = Color3.fromRGB(40, 80, 80),
+            DialogButtonBorder = Color3.fromRGB(80, 110, 110),
+            DialogBorder = Color3.fromRGB(50, 100, 100),
+            DialogInput = Color3.fromRGB(45, 90, 90),
+            DialogInputLine = Color3.fromRGB(130, 170, 170),
+            Text = Color3.fromRGB(240, 240, 240),
+            SubText = Color3.fromRGB(170, 170, 170),
+            Hover = Color3.fromRGB(110, 160, 160),
+            HoverChange = 0.04,
+        }
     end,
     [50] = function()
         local aa, ab, ac, ad, ae = b(50)
@@ -4478,3 +4998,403 @@ local aa = {
             DialogInputLine = Color3.fromRGB(120, 120, 120),
         }
     end,
+    [52] = function()
+        local aa, ab, ac, ad, ae = b(52)
+
+        return {
+            Name = 'Light',
+            Accent = Color3.fromRGB(0, 103, 192),
+            AcrylicMain = Color3.fromRGB(200, 200, 200),
+            AcrylicBorder = Color3.fromRGB(120, 120, 120),
+            AcrylicGradient = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 255, 255)),
+            AcrylicNoise = 0.96,
+            TitleBarLine = Color3.fromRGB(160, 160, 160),
+            Tab = Color3.fromRGB(90, 90, 90),
+            Element = Color3.fromRGB(255, 255, 255),
+            ElementBorder = Color3.fromRGB(180, 180, 180),
+            InElementBorder = Color3.fromRGB(150, 150, 150),
+            ElementTransparency = 0.65,
+            ToggleSlider = Color3.fromRGB(40, 40, 40),
+            ToggleToggled = Color3.fromRGB(255, 255, 255),
+            SliderRail = Color3.fromRGB(40, 40, 40),
+            DropdownFrame = Color3.fromRGB(200, 200, 200),
+            DropdownHolder = Color3.fromRGB(240, 240, 240),
+            DropdownBorder = Color3.fromRGB(200, 200, 200),
+            DropdownOption = Color3.fromRGB(150, 150, 150),
+            Keybind = Color3.fromRGB(120, 120, 120),
+            Input = Color3.fromRGB(200, 200, 200),
+            InputFocused = Color3.fromRGB(100, 100, 100),
+            InputIndicator = Color3.fromRGB(80, 80, 80),
+            Dialog = Color3.fromRGB(255, 255, 255),
+            DialogHolder = Color3.fromRGB(240, 240, 240),
+            DialogHolderLine = Color3.fromRGB(228, 228, 228),
+            DialogButton = Color3.fromRGB(255, 255, 255),
+            DialogButtonBorder = Color3.fromRGB(190, 190, 190),
+            DialogBorder = Color3.fromRGB(140, 140, 140),
+            DialogInput = Color3.fromRGB(250, 250, 250),
+            DialogInputLine = Color3.fromRGB(160, 160, 160),
+            Text = Color3.fromRGB(0, 0, 0),
+            SubText = Color3.fromRGB(40, 40, 40),
+            Hover = Color3.fromRGB(50, 50, 50),
+            HoverChange = 0.16,
+        }
+    end,
+    [53] = function()
+        local aa, ab, ac, ad, ae = b(53)
+
+        return {
+            Name = 'Rose',
+            Accent = Color3.fromRGB(180, 55, 90),
+            AcrylicMain = Color3.fromRGB(40, 40, 40),
+            AcrylicBorder = Color3.fromRGB(130, 90, 110),
+            AcrylicGradient = ColorSequence.new(Color3.fromRGB(190, 60, 135), Color3.fromRGB(165, 50, 70)),
+            AcrylicNoise = 0.92,
+            TitleBarLine = Color3.fromRGB(140, 85, 105),
+            Tab = Color3.fromRGB(180, 140, 160),
+            Element = Color3.fromRGB(200, 120, 170),
+            ElementBorder = Color3.fromRGB(110, 70, 85),
+            InElementBorder = Color3.fromRGB(120, 90, 90),
+            ElementTransparency = 0.86,
+            ToggleSlider = Color3.fromRGB(200, 120, 170),
+            ToggleToggled = Color3.fromRGB(0, 0, 0),
+            SliderRail = Color3.fromRGB(200, 120, 170),
+            DropdownFrame = Color3.fromRGB(200, 160, 180),
+            DropdownHolder = Color3.fromRGB(120, 50, 75),
+            DropdownBorder = Color3.fromRGB(90, 40, 55),
+            DropdownOption = Color3.fromRGB(200, 120, 170),
+            Keybind = Color3.fromRGB(200, 120, 170),
+            Input = Color3.fromRGB(200, 120, 170),
+            InputFocused = Color3.fromRGB(20, 10, 30),
+            InputIndicator = Color3.fromRGB(170, 150, 190),
+            Dialog = Color3.fromRGB(120, 50, 75),
+            DialogHolder = Color3.fromRGB(95, 40, 60),
+            DialogHolderLine = Color3.fromRGB(90, 35, 55),
+            DialogButton = Color3.fromRGB(120, 50, 75),
+            DialogButtonBorder = Color3.fromRGB(155, 90, 115),
+            DialogBorder = Color3.fromRGB(100, 70, 90),
+            DialogInput = Color3.fromRGB(135, 55, 80),
+            DialogInputLine = Color3.fromRGB(190, 160, 180),
+            Text = Color3.fromRGB(240, 240, 240),
+            SubText = Color3.fromRGB(170, 170, 170),
+            Hover = Color3.fromRGB(200, 120, 170),
+            HoverChange = 0.04,
+        }
+    end,
+}
+
+do
+    local ab, ac, ad, ae, af, ag, ah, aj, c, e, f, g, h, i, j, k = task, setmetatable, error, newproxy, getmetatable, next, table, unpack, coroutine, script, type, require, pcall, getfenv, setfenv, rawget
+    local l, m, n, o, p, s, t, u, v, w, x = ah.insert, ah.remove, ah.freeze or function(l)
+        return l
+    end, ab and ab.defer or function(l, ...)
+        local m = c.create(l)
+
+        c.resume(m, ...)
+
+        return m
+    end, '0.0.0-venv', {}, {}, {}, {}, {}, {}
+    local y, z = {
+        GetChildren = function(y)
+            local z, A = x[y], {}
+
+            for B in ag, z do
+                l(A, B)
+            end
+
+            return A
+        end,
+        FindFirstChild = function(y, z)
+            if not z then
+                ad('Argument 1 missing or nil', 2)
+            end
+
+            for A in ag, x[y]do
+                if A.Name == z then
+                    return A
+                end
+            end
+
+            return
+        end,
+        GetFullName = function(y)
+            local z, A = y.Name, y.Parent
+
+            while A do
+                z = A.Name .. '.' .. z
+                A = A.Parent
+            end
+
+            return 'VirtualEnv.' .. z
+        end,
+    }, {}
+
+    for A, B in ag, y do
+        z[A] = function(C, ...)
+            if not x[C] then
+                ad("Expected ':' not '.' calling member function " .. A, 1)
+            end
+
+            return B(C, ...)
+        end
+    end
+
+    local C = function(C, D, E)
+        local F, G, H, I, J = ac({}, {
+            __mode = 'k',
+        }), function(F)
+            ad(F .. ' is not a valid (virtual) member of ' .. C .. ' "' .. D .. '"', 1)
+        end, function(F)
+            ad('Unable to assign (virtual) property ' .. F .. '. Property is read only', 1)
+        end, (ae(true))
+        local K = af(I)
+
+        K.__index = function(L, M)
+            if M == 'ClassName' then
+                return C
+            elseif M == 'Name' then
+                return D
+            elseif M == 'Parent' then
+                return E
+            elseif C == 'StringValue' and M == 'Value' then
+                return J
+            else
+                local N = z[M]
+
+                if N then
+                    return N
+                end
+            end
+
+            for N in ag, F do
+                if N.Name == M then
+                    return N
+                end
+            end
+
+            G(M)
+        end
+        K.__newindex = function(L, M, N)
+            if M == 'ClassName' then
+                H(M)
+            elseif M == 'Name' then
+                D = N
+            elseif M == 'Parent' then
+                if N == I then
+                    return
+                end
+                if E ~= nil then
+                    x[E][I] = nil
+                end
+
+                E = N
+
+                if N ~= nil then
+                    x[N][I] = true
+                end
+            elseif C == 'StringValue' and M == 'Value' then
+                J = N
+            else
+                G(M)
+            end
+        end
+        K.__tostring = function()
+            return D
+        end
+        x[I] = F
+
+        if E ~= nil then
+            x[E][I] = true
+        end
+
+        return I
+    end
+
+    local function D(E, F)
+        local G, H, I, J = E[1], E[2], E[3], E[4]
+        local K = m(I, 1)
+        local L = C(H, K, F)
+
+        s[G] = L
+
+        if I then
+            for M, N in ag, I do
+                L[M] = N
+            end
+        end
+        if J then
+            for M, N in ag, J do
+                D(N, L)
+            end
+        end
+
+        return L
+    end
+
+    local E = {}
+
+    for F, G in ag, a do
+        l(E, D(G))
+    end
+    for H, I in ag, aa do
+        local J = s[H]
+
+        if not J then continue end
+
+        t[J] = I
+
+        local K = J.ClassName
+
+        if K == 'LocalScript' or K == 'Script' then
+            l(v, J)
+        end
+    end
+
+    local J = function(J)
+        local K, L = J.ClassName, u[J]
+
+        if L and K == 'ModuleScript' then
+            return aj(L)
+        end
+
+        local M = t[J]
+
+        if not M then
+            return
+        end
+        if K == 'LocalScript' or K == 'Script' then
+            M()
+
+            return
+        else
+            local N = {
+                M(),
+            }
+
+            u[J] = N
+
+            return aj(N)
+        end
+    end
+
+    function b(K)
+        local L = s[K]
+        local M = t[L]
+
+        if not M then
+            return
+        end
+
+        local N, O, P, Q, R, S, T = false, n{
+            Version = p,
+            Script = e,
+            Shared = w,
+            GetScript = function()
+                return e
+            end,
+            GetShared = function()
+                return w
+            end,
+        }, L, function(N, ...)
+            if x[N] and N.ClassName == 'ModuleScript' and t[N] then
+                return J(N)
+            end
+
+            return g(N, ...)
+        end
+        local U, V = function(U, ...)
+            if not N then
+                T()
+            end
+            if f(U) == 'number' and U >= 0 then
+                if U == 0 then
+                    return S
+                else
+                    U = U + 1
+
+                    local V, W = h(i, U)
+
+                    if V and W == R then
+                        return S
+                    end
+                end
+            end
+
+            return i(U, ...)
+        end, function(U, V, ...)
+            if not N then
+                T()
+            end
+            if f(U) == 'number' and U >= 0 then
+                if U == 0 then
+                    return j(S, V)
+                else
+                    U = U + 1
+
+                    local W, X = h(i, U)
+
+                    if W and X == R then
+                        return j(S, V)
+                    end
+                end
+            end
+
+            return j(U, V, ...)
+        end
+
+        function T()
+            R = i(0)
+
+            local W = {
+                maui = O,
+                script = P,
+                require = Q,
+                getfenv = U,
+                setfenv = V,
+            }
+
+            S = ac({}, {
+                __index = function(X, Y)
+                    local Z = k(S, Y)
+
+                    if Z ~= nil then
+                        return Z
+                    end
+
+                    local _ = W[Y]
+
+                    if _ ~= nil then
+                        return _
+                    end
+
+                    return R[Y]
+                end,
+            })
+
+            j(M, S)
+
+            N = true
+        end
+
+        return O, P, Q, U, V
+    end
+
+    for K, L in ag, v do
+        o(J, L)
+    end
+
+    do
+        local M
+
+        for N, O in ag, E do
+            if O.ClassName == 'ModuleScript' and O.Name == 'MainModule' then
+                M = O
+
+                break
+            end
+        end
+
+        if M then
+            return J(M)
+        end
+    end
+end
