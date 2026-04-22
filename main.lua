@@ -303,25 +303,23 @@ local aa = {
         v(w)
         t:Init(w)
 
-        -- ── Click sound (shared, one instance) ──────────────────────────────
         local _clickSound = Instance.new('Sound')
         _clickSound.SoundId  = 'rbxassetid://115827966182507'
         _clickSound.Volume   = 0.55
         _clickSound.RollOffMaxDistance = 0
         _clickSound.Parent   = w
-        -- Pre-load so first click has no delay
+
         game:GetService('ContentProvider'):PreloadAsync({_clickSound})
 
         local function _playClick()
-            -- Clone-play pattern: lets overlapping clicks all sound
+
             local _s = _clickSound:Clone()
             _s.Parent = _clickSound.Parent
             _s:Play()
             game:GetService('Debris'):AddItem(_s, 2)
         end
-        -- Register globally so Creator.AddSignal can reach it across module boundaries
+
         _G.__fluentClickSound = _playClick
-        -- ────────────────────────────────────────────────────────────────────
 
         local x = {
             Version = '1.1.0',
@@ -408,7 +406,6 @@ local aa = {
 
         x.Elements = z
 
-        -- Color() helper: Color("#hex1") or Color("#hex1","#hex2")
         local _windowColors = nil
         local function Color(hex1, hex2)
             local function fromHex(h)
@@ -427,11 +424,10 @@ local aa = {
         if getgenv then getgenv().Color = Color end
 
         function x.CreateWindow(C, D, ...)
-            -- Handle 3-arg method call: library:AddWindow("Title", opts)
-            -- Lua passes: C=self, D="Title", ...=opts
+
             local _extra = select(1, ...)
             if type(C) ~= 'string' and type(D) == 'string' and type(_extra) == 'table' then
-                -- method call form: self, title, optsTable
+
                 local _opts = _extra
                 _opts.Title = D
                 D = _opts
@@ -446,7 +442,6 @@ local aa = {
                 D = { Title = D }
             end
 
-            -- No theme option exposed; always use Dark as base
             local _theme = 'Dark'
             if not D.TabWidth then D.TabWidth = 120 end
 
@@ -461,7 +456,6 @@ local aa = {
             x.UseAcrylic = D.Acrylic
             if D.Acrylic then r.init() end
 
-            -- Resolve size: accept lowercase or uppercase key
             local rawSize = D.size or D.Size or UDim2.fromOffset(580, 460)
             local winSize
             if typeof(rawSize) == 'UDim2' then
@@ -481,17 +475,14 @@ local aa = {
             x.Window = E
             x:SetTheme(_theme)
 
-            -- Resolve colors
             local colors = D.colors or _windowColors
             local _ts = game:GetService('TweenService')
 
-            -- darken helper: amt=1.0 means original, 0.0 means black
             local function darken(c, amt)
                 local h2,s2,v2 = Color3.toHSV(c)
                 return Color3.fromHSV(h2, math.min(s2*1.1,1), v2*(amt or 0.7))
             end
 
-            -- Parent window root directly (no CanvasGroup wrapper - avoids blur/size issues)
             E.Root.Parent = w
 
             local _glassAlpha = D.GlassmorphismAlpha
@@ -504,7 +495,7 @@ local aa = {
                     local paint = E.AcrylicPaint and E.AcrylicPaint.Frame
                     if paint then
                         if alpha == 1 then
-                            -- Fully transparent: vanilla Fluent look
+
                             paint.BackgroundTransparency = 1
                             for _, child in ipairs(paint:GetChildren()) do
                                 if child:IsA('Frame') then
@@ -515,16 +506,14 @@ local aa = {
                                 end
                             end
                         elseif alpha == 0 then
-                            -- Fully opaque: gradient colors already applied, no extra glass
+
                             paint.BackgroundTransparency = 0
                         else
-                            -- Mid-range: tint the background with gradient primary color
-                            -- alpha=0.6 means 60% transparent → the gradient bleeds through nicely
+
                             local tintColor = (colors and colors.primary) or Color3.fromRGB(20, 20, 20)
                             paint.BackgroundColor3 = tintColor
                             paint.BackgroundTransparency = alpha
 
-                            -- Restore/reapply the gradient on top at reduced opacity
                             local eg = paint:FindFirstChildWhichIsA('UIGradient')
                             if not eg then
                                 eg = Instance.new('UIGradient', paint)
@@ -549,15 +538,14 @@ local aa = {
                                     ColorSequenceKeypoint.new(1,    p1),
                                 })
                                 eg.Rotation = 135
-                                -- Transparency of the gradient layer scales with alpha
+
                                 eg.Transparency = NumberSequence.new(alpha * 0.5)
                             end
 
-                            -- Child frames: keep mostly transparent so tinted bg shows
                             for _, child in ipairs(paint:GetChildren()) do
                                 if child:IsA('Frame') then
                                     if child.BackgroundColor3 == Color3.new(0,0,0) then
-                                        -- dark overlay for readability: scale with alpha
+
                                         child.BackgroundTransparency = 0.3 + alpha * 0.45
                                     else
                                         child.BackgroundTransparency = 1
@@ -569,12 +557,11 @@ local aa = {
                             end
                         end
                     end
-                    -- Root frame: always transparent (it's just a container)
+
                     if E.Root then
                         pcall(function() E.Root.BackgroundTransparency = 1 end)
                     end
-                    -- Content area: subtle glass effect scaled with alpha
-                    -- ContainerHolder is plain Frame; no GroupTransparency
+
                 end)
             end
 
@@ -584,7 +571,7 @@ local aa = {
             end
             local function _fadeIn()
                 E.Root.Visible = true
-                -- Quick scale-in pop animation
+
                 pcall(function()
                     local uiScale = E.Root:FindFirstChildOfClass('UIScale')
                     if not uiScale then
@@ -598,7 +585,7 @@ local aa = {
             end
 
             if colors then
-                -- Patch GetThemeProperty so UpdateTheme never resets our colors
+
                 local _origGetThemeProp = p.GetThemeProperty
                 p.GetThemeProperty = function(self, tag)
                     if tag == 'AcrylicMain' then
@@ -621,20 +608,17 @@ local aa = {
                     return _origGetThemeProp(self, tag)
                 end
 
-                -- Apply visible gradient directly by modifying existing AcrylicPaint frames
                 task.defer(function()
                     pcall(function()
                         local paint = E.AcrylicPaint.Frame
 
-                        -- Make the outer paint frame fully opaque with our primary color
                         paint.BackgroundColor3 = colors.primary
                         paint.BackgroundTransparency = 0
 
-                        -- Apply gradient to the outer frame itself
                         local existingGrad = paint:FindFirstChildWhichIsA('UIGradient')
                         if existingGrad then existingGrad:Destroy() end
                         local outerGrad = Instance.new('UIGradient', paint)
-                        -- Shared lerp helper (also used by notification)
+
                         local function lerpColor(a, b, t)
                             return Color3.new(
                                 a.R + (b.R - a.R) * t,
@@ -644,7 +628,7 @@ local aa = {
                         end
                         _G.__lerpColor  = lerpColor
                         _G.__gradColors = colors
-                        -- 8-keypoint gradient: both colors ripple across both sides
+
                         local p1,p2 = colors.primary, colors.secondary
                         outerGrad.Color = ColorSequence.new({
                             ColorSequenceKeypoint.new(0,    p1),
@@ -658,12 +642,11 @@ local aa = {
                         })
                         outerGrad.Rotation = 135
 
-                        -- Hide or neutralise all child frames so they don't cover the gradient
                         for _, child in ipairs(paint:GetChildren()) do
                             if child:IsA('Frame') then
-                                -- Make child frames fully transparent so gradient shows through
+
                                 child.BackgroundTransparency = 1
-                                -- Remove any UIGradient inside children that would override ours
+
                                 local cg = child:FindFirstChildWhichIsA('UIGradient')
                                 if cg then cg:Destroy() end
                             elseif child:IsA('ImageLabel') then
@@ -672,7 +655,6 @@ local aa = {
                             end
                         end
 
-                        -- Add a subtle dark overlay on top for readability (very light)
                         local overlay = Instance.new('Frame', paint)
                         overlay.Size = UDim2.fromScale(1,1)
                         overlay.BackgroundColor3 = Color3.new(0,0,0)
@@ -680,23 +662,20 @@ local aa = {
                         overlay.BorderSizePixel = 0
                         Instance.new('UICorner', overlay).CornerRadius = UDim.new(0,35)
 
-                        -- Thin glowing border
                         local stroke = Instance.new('UIStroke', paint)
                         stroke.Thickness = 1.5
                         stroke.Color = colors.secondary
                         stroke.Transparency = 0.3
 
                         p.UpdateTheme()
-                        -- Apply glassmorphism after colors are set
+
                         task.defer(_applyGlass)
                     end)
                 end)
             end
 
-            -- Apply glassmorphism on initial load
             task.defer(_applyGlass)
 
-            -- Circle minimise
             local circleOpts = D.circle or {}
             local circleSize  = circleOpts.size  or 56
             local circleImage = circleOpts.image or ''
@@ -736,7 +715,6 @@ local aa = {
                     g.Rotation = 135
                 end
 
-                -- Drag
                 local dragging, dragStart, startPos, _moved = false, nil, nil, false
                 btn.InputBegan:Connect(function(inp)
                     if inp.UserInputType == Enum.UserInputType.MouseButton1
@@ -776,7 +754,6 @@ local aa = {
                 _circleGui = gui
             end
 
-            -- Override Minimize synchronously so title bar + keybind both use it
             local function _doMinimize()
                 E.Minimized = not E.Minimized
                 if E.Minimized then
@@ -792,22 +769,10 @@ local aa = {
             E.Minimize = _doMinimize
             E._customMinimize = _doMinimize
 
-            -- Build lib handle
-            -- Mirrors the reference library API exactly:
-            --   window_data:AddTab(name)           -> tab_data
-            --   tab_data:AddFolder(name)           -> folder_data  (inherits all tab methods)
-            --   tab_data:AddSwitch(text, cb)       -> switch_data  (switch_data:Set(bool))
-            --   tab_data:AddSlider(text, cb, opts) -> slider_data  (slider_data:Set(val))
-            --   tab_data:AddLabel(text)            -> label proxy  (.Text = "..." works)
-            --   tab_data:AddButton(text, cb)       -> button obj
-            --   tab_data:AddTextBox(text, cb)      -> textbox obj
-            --   tab_data:AddDropdown(name, cb)     -> dropdown_data (dropdown_data:Add(n))
-
             local lib = {}
             local _tabCount = 0
             local _win = E
 
-            -- Label proxy: lets script do label.Text = "..." directly
             local function _labelProxy(elem, initText)
                 return setmetatable({}, {
                     __index = function(_, k)
@@ -826,7 +791,6 @@ local aa = {
                 })
             end
 
-            -- Switch wrapper: exposes :Set(bool) matching reference library
             local function _switchWrap(fluentToggle)
                 local sw = {}
                 function sw:Set(bool)
@@ -836,7 +800,6 @@ local aa = {
                 return sw
             end
 
-            -- Slider wrapper: exposes :Set(value) matching reference library
             local function _sliderWrap(fluentSlider, opts)
                 local sd = {}
                 function sd:Set(val)
@@ -846,7 +809,6 @@ local aa = {
                 return sd
             end
 
-            -- Dropdown wrapper: exposes :Add(name) and :Refresh(list)
             local function _dropdownWrap(fluentDD, initValues)
                 local dd = {}
                 local _values = initValues and {table.unpack(initValues)} or {}
@@ -869,7 +831,6 @@ local aa = {
                 return dd
             end
 
-            -- Build a tab handle with all Add* methods routing to a Fluent tab
             local function _makeTabHandle(ft, myIndex)
                 local tab_data = {}
 
@@ -925,7 +886,7 @@ local aa = {
                 end
 
                 function tab_data:AddDropdown(name, valuesOrCb, cb)
-                    -- Support both (name, cb) and (name, values, cb) call forms
+
                     local initValues, callback
                     if type(valuesOrCb) == 'table' then
                         initValues = valuesOrCb
@@ -944,9 +905,9 @@ local aa = {
                 end
 
                 function tab_data:AddFolder(name)
-                    -- AddSection is visual only in Fluent; items still go into the tab
+
                     pcall(function() ft:AddSection(tostring(name or '')) end)
-                    -- Return a folder_data that inherits all tab methods (same as reference lib)
+
                     local folder_data = {}
                     for k, v in pairs(tab_data) do
                         folder_data[k] = v
@@ -957,7 +918,6 @@ local aa = {
                 return tab_data
             end
 
-            -- window:AddTab(name) -> tab handle
             function lib:AddTab(name)
                 _tabCount = _tabCount + 1
                 local ft = _win:AddTab(tostring(name or 'Tab'))
@@ -1877,20 +1837,19 @@ local aa = {
 
             r:Open()
 
-            -- Apply gradient colors + forced glassmorphism to notification
             task.defer(function()
                 pcall(function()
                     local nColors = _G.__gradColors
                     local nLerp   = _G.__lerpColor
                     if nColors and nLerp and r.AcrylicPaint and r.AcrylicPaint.Frame then
                         local npaint = r.AcrylicPaint.Frame
-                        -- Force glass: make backing semi-transparent
+
                         npaint.BackgroundTransparency = 0.35
                         npaint.BackgroundColor3 = nColors.primary
-                        -- Remove old gradient
+
                         local eg = npaint:FindFirstChildWhichIsA('UIGradient')
                         if eg then eg:Destroy() end
-                        -- Apply matching 8-keypoint gradient
+
                         local ng = Instance.new('UIGradient', npaint)
                         local p1,p2 = nColors.primary, nColors.secondary
                         ng.Color = ColorSequence.new({
@@ -1904,7 +1863,7 @@ local aa = {
                             ColorSequenceKeypoint.new(1,    p1),
                         })
                         ng.Rotation = 135
-                        -- Hide child frames that would cover gradient
+
                         for _, child in ipairs(npaint:GetChildren()) do
                             if child:IsA('Frame') then
                                 child.BackgroundTransparency = 1
@@ -1915,14 +1874,14 @@ local aa = {
                                 child.BackgroundTransparency = 1
                             end
                         end
-                        -- Dark overlay for text readability
+
                         local ov = Instance.new('Frame', npaint)
                         ov.Size = UDim2.fromScale(1,1)
                         ov.BackgroundColor3 = Color3.new(0,0,0)
                         ov.BackgroundTransparency = 0.6
                         ov.BorderSizePixel = 0
                         Instance.new('UICorner', ov).CornerRadius = UDim.new(0, 12)
-                        -- Glowing border matching secondary color
+
                         local ns = Instance.new('UIStroke', npaint)
                         ns.Thickness = 1.2
                         ns.Color = nColors.secondary
@@ -2592,7 +2551,7 @@ local aa = {
                 D.Size = UDim2.new(0, 4, 0, K)
             end)
             v.ContainerBackMotor:onStep(function(K)
-                -- ContainerHolder is now a plain Frame; GroupTransparency not needed
+
             end)
             v.ContainerPosMotor:onStep(function(K)
                 v.ContainerHolder.Position = UDim2.fromOffset(t.TabWidth + 26, K)
@@ -2673,7 +2632,7 @@ local aa = {
                     local N, O = M.Position - B, v.Size
                     local P = Vector3.new(O.X.Offset, O.Y.Offset, 0) + Vector3.new(1, 1, 0) * N
                     local Q = Vector2.new(math.clamp(P.X, 200, 2048), math.clamp(P.Y, 200, 2048))
-                    -- Set size directly during drag; skip motor to avoid per-frame onStep spam
+
                     v.Root.Size = UDim2.fromOffset(Q.X, Q.Y)
                     G:setGoal{
                         X = l.Instant.new(Q.X),
@@ -2701,7 +2660,7 @@ local aa = {
             end)
 
             function v.Minimize(M)
-                -- Delegate to custom override if set (set by AddWindow wrapper)
+
                 if v._customMinimize then
                     v._customMinimize()
                     return
@@ -2868,7 +2827,7 @@ local aa = {
         end
 
         function k.AddSignal(m, n)
-            -- Auto-play click sound on any button click signal
+
             local _sname = tostring(m)
             if _sname:find('MouseButton1Click') or _sname:find('MouseButton1Down') then
                 table.insert(k.Signals, m:Connect(function(...)
@@ -3023,9 +2982,6 @@ local aa = {
         end
 
         return l
-    end,
-    [21] = function()
-        return {}
     end,
     [22] = function()
         local aa, ab, ac, ad, ae = b(22)
@@ -3788,7 +3744,7 @@ local aa = {
             assert(f.Default ~= nil, 'Slider - Missing default value.')
             assert(f.Min ~= nil, 'Slider - Missing minimum value.')
             assert(f.Max ~= nil, 'Slider - Missing maximum value.')
-            f.Rounding = f.Rounding or 1  -- default: whole numbers
+            f.Rounding = f.Rounding or 1
 
             local h, i, j = {
                 Value = nil,
@@ -3861,9 +3817,8 @@ local aa = {
                 l,
             })
 
-            local _activeTouch = nil  -- track the specific touch InputObject
+            local _activeTouch = nil
 
-            -- Rail: tap anywhere on rail to seek (mouse + touch)
             ah.AddSignal(o.InputBegan, function(p)
                 if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
                     local s = math.clamp((p.Position.X - l.AbsolutePosition.X) / l.AbsoluteSize.X, 0, 1)
@@ -3871,7 +3826,6 @@ local aa = {
                 end
             end)
 
-            -- Thumb drag: begin
             ah.AddSignal(k.InputBegan, function(p)
                 if p.UserInputType == Enum.UserInputType.MouseButton1 then
                     i = true
@@ -3886,7 +3840,7 @@ local aa = {
                     _activeTouch = nil
                 end
             end)
-            -- Global move: covers mouse drag + touch move outside thumb bounds
+
             ah.AddSignal(af.InputChanged, function(p)
                 if not i then return end
                 local isMouse  = p.UserInputType == Enum.UserInputType.MouseMovement
@@ -3897,7 +3851,7 @@ local aa = {
                     h:SetValue(h.Min + ((h.Max - h.Min) * s))
                 end
             end)
-            -- Safety: release if touch ends anywhere on screen
+
             ah.AddSignal(af.InputEnded, function(p)
                 if p.UserInputType == Enum.UserInputType.Touch and p == _activeTouch then
                     i = false
@@ -4100,9 +4054,6 @@ local aa = {
 
         return ai
     end,
-    [32] = function()
-        return nil
-    end,
     [33] = function()
         local aa, ab, ac, ad, ae = b(33)
         local af, ag, ah = ac(ab.Parent.BaseMotor), ac(ab.Parent.SingleMotor), ac(ab.Parent.isMotor)
@@ -4209,9 +4160,6 @@ local aa = {
 
         return ai
     end,
-    [34] = function()
-        return nil
-    end,
     [35] = function()
         local aa, ab, ac, ad, ae = b(35)
         local af = {}
@@ -4229,15 +4177,6 @@ local aa = {
         end
 
         return af
-    end,
-    [36] = function()
-        return nil
-    end,
-    [37] = function()
-        return nil
-    end,
-    [38] = function()
-        return nil
     end,
     [39] = function()
         local aa, ab, ac, ad, ae = b(39)
@@ -4300,9 +4239,6 @@ local aa = {
         end
 
         return ag
-    end,
-    [40] = function()
-        return nil
     end,
     [41] = function()
         local aa, ab, ac, ad, ae = b(41)
@@ -4370,9 +4306,6 @@ local aa = {
         end
 
         return ag
-    end,
-    [42] = function()
-        return nil
     end,
     [43] = function()
         local aa, ab, ac, ad, ae = b(43)
@@ -4444,9 +4377,6 @@ local aa = {
 
         return aj
     end,
-    [44] = function()
-        return nil
-    end,
     [45] = function()
         local aa, ab, ac, ad, ae = b(45)
         local af = function(af)
@@ -4460,9 +4390,6 @@ local aa = {
         end
 
         return af
-    end,
-    [46] = function()
-        return nil
     end,
     [47] = function()
         local aa, ab, ac, ad, ae = b(47)
@@ -4480,12 +4407,6 @@ local aa = {
         end
 
         return af
-    end,
-    [48] = function()
-        return {}
-    end,
-    [49] = function()
-        return {}
     end,
     [50] = function()
         local aa, ab, ac, ad, ae = b(50)
@@ -4556,10 +4477,4 @@ local aa = {
             DialogInput = Color3.fromRGB(45, 45, 45),
             DialogInputLine = Color3.fromRGB(120, 120, 120),
         }
-    end,
-    [52] = function()
-        return {}
-    end,
-    [53] = function()
-        return {}
     end,
