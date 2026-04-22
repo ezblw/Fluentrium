@@ -401,6 +401,26 @@ local aa = {
         v(w)
         t:Init(w)
 
+        -- ── Click sound (shared, one instance) ──────────────────────────────
+        local _clickSound = Instance.new('Sound')
+        _clickSound.SoundId  = 'rbxassetid://115827966182507'
+        _clickSound.Volume   = 0.55
+        _clickSound.RollOffMaxDistance = 0
+        _clickSound.Parent   = w
+        -- Pre-load so first click has no delay
+        game:GetService('ContentProvider'):PreloadAsync({_clickSound})
+
+        local function _playClick()
+            -- Clone-play pattern: lets overlapping clicks all sound
+            local _s = _clickSound:Clone()
+            _s.Parent = _clickSound.Parent
+            _s:Play()
+            game:GetService('Debris'):AddItem(_s, 2)
+        end
+        -- Register globally so Creator.AddSignal can reach it across module boundaries
+        _G.__fluentClickSound = _playClick
+        -- ────────────────────────────────────────────────────────────────────
+
         local x = {
             Version = '1.1.0',
             OpenFrames = {},
@@ -652,9 +672,7 @@ local aa = {
                         pcall(function() E.Root.BackgroundTransparency = 1 end)
                     end
                     -- Content area: subtle glass effect scaled with alpha
-                    if E.ContainerHolder then
-                        pcall(function() E.ContainerHolder.GroupTransparency = alpha * 0.25 end)
-                    end
+                    -- ContainerHolder is plain Frame; no GroupTransparency
                 end)
             end
 
@@ -845,6 +863,7 @@ local aa = {
                 end)
 
                 btn.MouseButton1Click:Connect(function()
+                    pcall(_G.__fluentClickSound)
                     if not _moved then
                         gui.Enabled = false
                         _fadeIn()
@@ -2602,10 +2621,11 @@ local aa = {
                     TextColor3 = 'Text',
                 },
             })
-            v.ContainerHolder = s('CanvasGroup', {
+            v.ContainerHolder = s('Frame', {
                 Size = UDim2.new(1, -t.TabWidth - 32, 1, -102),
                 Position = UDim2.fromOffset(t.TabWidth + 26, 90),
                 BackgroundTransparency = 1,
+                ClipsDescendants = true,
             })
             v.Root = s('Frame', {
                 BackgroundTransparency = 1,
@@ -2670,7 +2690,7 @@ local aa = {
                 D.Size = UDim2.new(0, 4, 0, K)
             end)
             v.ContainerBackMotor:onStep(function(K)
-                v.ContainerHolder.GroupTransparency = K
+                -- ContainerHolder is now a plain Frame; GroupTransparency not needed
             end)
             v.ContainerPosMotor:onStep(function(K)
                 v.ContainerHolder.Position = UDim2.fromOffset(t.TabWidth + 26, K)
@@ -2751,7 +2771,8 @@ local aa = {
                     local N, O = M.Position - B, v.Size
                     local P = Vector3.new(O.X.Offset, O.Y.Offset, 0) + Vector3.new(1, 1, 0) * N
                     local Q = Vector2.new(math.clamp(P.X, 200, 2048), math.clamp(P.Y, 200, 2048))
-
+                    -- Set size directly during drag; skip motor to avoid per-frame onStep spam
+                    v.Root.Size = UDim2.fromOffset(Q.X, Q.Y)
                     G:setGoal{
                         X = l.Instant.new(Q.X),
                         Y = l.Instant.new(Q.Y),
@@ -2945,7 +2966,16 @@ local aa = {
         end
 
         function k.AddSignal(m, n)
-            table.insert(k.Signals, m:Connect(n))
+            -- Auto-play click sound on any button click signal
+            local _sname = tostring(m)
+            if _sname:find('MouseButton1Click') or _sname:find('MouseButton1Down') then
+                table.insert(k.Signals, m:Connect(function(...)
+                    pcall(_G.__fluentClickSound)
+                    n(...)
+                end))
+            else
+                table.insert(k.Signals, m:Connect(n))
+            end
         end
         function k.Disconnect()
             for m = #k.Signals, 1, -1 do
@@ -5449,7 +5479,7 @@ local aa = {
         end
         function ai.start(aj)
             if not aj._connection then
-                aj._connection = af.RenderStepped:Connect(function(c)
+                aj._connection = af.Heartbeat:Connect(function(c)
                     aj:step(c)
                 end)
             end
