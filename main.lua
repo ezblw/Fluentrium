@@ -871,6 +871,85 @@ local aa = {
             E.Minimize = _doMinimize
             E._customMinimize = _doMinimize
 
+            -- Resize handle
+            do
+                local _uis = game:GetService('UserInputService')
+                local _ts3 = game:GetService('TweenService')
+
+                -- corner grip button (bottom-right of Root)
+                local resizeHandle = Instance.new('ImageButton')
+                resizeHandle.Name = 'ResizeHandle'
+                resizeHandle.Size = UDim2.fromOffset(20, 20)
+                resizeHandle.Position = UDim2.new(1, -20, 1, -20)
+                resizeHandle.AnchorPoint = Vector2.new(0, 0)
+                resizeHandle.BackgroundTransparency = 1
+                resizeHandle.AutoButtonColor = false
+                resizeHandle.ZIndex = 10
+                resizeHandle.Parent = E.Root
+
+                -- chevron icon (bottom-right arrows)
+                local resizeIcon = Instance.new('ImageLabel')
+                resizeIcon.Size = UDim2.fromOffset(14, 14)
+                resizeIcon.Position = UDim2.fromOffset(3, 3)
+                resizeIcon.BackgroundTransparency = 1
+                resizeIcon.Image = 'rbxassetid://7072706796' -- resize/corner icon
+                resizeIcon.ImageTransparency = 0.8
+                resizeIcon.ZIndex = 11
+                resizeIcon.Parent = resizeHandle
+
+                local _isResizing = false
+                local _resizeStart = nil
+                local _sizeAtStart = nil
+
+                -- min/max clamp values
+                local _minW, _minH = 400, 300
+                local _maxW, _maxH = 900, 700
+
+                -- fade icon in/out
+                local function _setHandleAlpha(alpha, dur)
+                    _ts3:Create(resizeIcon, TweenInfo.new(dur or 0.15), {ImageTransparency = alpha}):Play()
+                end
+
+                resizeHandle.MouseEnter:Connect(function()
+                    if not _isResizing then
+                        _setHandleAlpha(0.2)
+                    end
+                end)
+                resizeHandle.MouseLeave:Connect(function()
+                    if not _isResizing then
+                        _setHandleAlpha(0.8)
+                    end
+                end)
+
+                resizeHandle.InputBegan:Connect(function(inp)
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1
+                    or inp.UserInputType == Enum.UserInputType.Touch then
+                        _isResizing = true
+                        _resizeStart = inp.Position
+                        _sizeAtStart = E.Root.Size
+                        _setHandleAlpha(0, 0.1)
+                        inp.Changed:Connect(function()
+                            if inp.UserInputState == Enum.UserInputState.End then
+                                _isResizing = false
+                                _setHandleAlpha(0.8, 0.2)
+                            end
+                        end)
+                    end
+                end)
+
+                _uis.InputChanged:Connect(function(inp)
+                    if _isResizing and (
+                        inp.UserInputType == Enum.UserInputType.MouseMovement
+                     or inp.UserInputType == Enum.UserInputType.Touch
+                    ) then
+                        local delta = inp.Position - _resizeStart
+                        local newW = math.clamp(_sizeAtStart.X.Offset + delta.X, _minW, _maxW)
+                        local newH = math.clamp(_sizeAtStart.Y.Offset + delta.Y, _minH, _maxH)
+                        E.Root.Size = UDim2.fromOffset(newW, newH)
+                    end
+                end)
+            end
+
             -- Build lib handle
             -- Mirrors the reference library API exactly:
             --   window_data:AddTab(name)           -> tab_data
