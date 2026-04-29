@@ -876,7 +876,6 @@ local aa = {
                 local _uis = game:GetService('UserInputService')
                 local _ts3 = game:GetService('TweenService')
 
-                -- WindUI-style resize handle: Frame anchored at corner, half outside
                 local resizeHandle = Instance.new('Frame')
                 resizeHandle.Name = 'ResizeHandle'
                 resizeHandle.Size = UDim2.fromOffset(32, 32)
@@ -887,25 +886,22 @@ local aa = {
                 resizeHandle.Active = true
                 resizeHandle.Parent = E.Root
 
-                -- WindUI's exact resize icon asset, always visible at 0.5 trans
                 local resizeIcon = Instance.new('ImageLabel')
                 resizeIcon.Size = UDim2.fromOffset(96, 96)
                 resizeIcon.Position = UDim2.new(0.5, -16, 0.5, -16)
                 resizeIcon.AnchorPoint = Vector2.new(0.5, 0.5)
                 resizeIcon.BackgroundTransparency = 1
                 resizeIcon.Image = 'rbxassetid://120997033468887'
-                resizeIcon.ImageTransparency = 0.5  -- always visible
+                resizeIcon.ImageTransparency = 0.5
                 resizeIcon.ZIndex = 100
                 resizeIcon.Parent = resizeHandle
 
                 local _isResizing = false
                 local _resizeStart = nil
                 local _sizeAtStart = nil
-
                 local _minW, _minH = 400, 300
                 local _maxW, _maxH = 900, 700
 
-                -- WindUI: brighter on hover, brightest on drag
                 resizeHandle.MouseEnter:Connect(function()
                     if not _isResizing then
                         _ts3:Create(resizeIcon, TweenInfo.new(0.15), {ImageTransparency = 0.25}):Play()
@@ -916,7 +912,6 @@ local aa = {
                         _ts3:Create(resizeIcon, TweenInfo.new(0.15), {ImageTransparency = 0.5}):Play()
                     end
                 end)
-
                 resizeHandle.InputBegan:Connect(function(inp)
                     if inp.UserInputType == Enum.UserInputType.MouseButton1
                     or inp.UserInputType == Enum.UserInputType.Touch then
@@ -932,7 +927,6 @@ local aa = {
                         end)
                     end
                 end)
-
                 _uis.InputChanged:Connect(function(inp)
                     if _isResizing and (
                         inp.UserInputType == Enum.UserInputType.MouseMovement
@@ -4430,141 +4424,145 @@ local aa = {
             h.SetTitle = j.SetTitle
             h.SetDesc = j.SetDesc
 
-            -- Value textbox (WindUI style: left-aligned, 0.4 trans, TextSize 15)
-            local valBox = ai('TextLabel', {
-                FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Medium),
-                Text = tostring(f.Default),
-                TextSize = 15,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 30, 0, 18),
-                TextTransparency = 0.4,
-                ThemeTag = { TextColor3 = 'Text' },
-            })
-
-            -- Thumb: WindUI uses a Squircle pill 26×17 (ThumbSize*2 x ThumbSize+4)
-            -- We approximate with UICorner. ThumbSize=13 => 26w x 17h
-            local thumbHighlight = ai('Frame', {
-                Size = UDim2.fromScale(1, 1),
-                BackgroundTransparency = 1,
-                ZIndex = 3,
+            -- Slider-style pill thumb (same as toggle thumb)
+            local thumbScale = ai('UIScale', { Scale = 1 })
+            local k = ai('Frame', {
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0, 0, 0.5, 0),
+                Size = UDim2.fromOffset(14, 14),
+                BackgroundColor3 = Color3.new(1, 1, 1),
+                BackgroundTransparency = 0,
+                ZIndex = 2,
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 8) }),
-                ai('UIGradient', {
-                    Rotation = 60,
-                    Color = ColorSequence.new({
-                        ColorSequenceKeypoint.new(0,   Color3.new(1,1,1)),
-                        ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)),
-                        ColorSequenceKeypoint.new(1,   Color3.new(1,1,1)),
-                    }),
-                    Transparency = NumberSequence.new({
-                        NumberSequenceKeypoint.new(0,   0.1),
-                        NumberSequenceKeypoint.new(0.5, 1),
-                        NumberSequenceKeypoint.new(1,   0.1),
+                ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                thumbScale,
+                ai('UIStroke', {
+                    Thickness = 1,
+                    Transparency = 0.5,
+                    ThemeTag = { Color = 'ToggleSlider' },
+                }),
+                ai('Frame', {
+                    Size = UDim2.fromScale(1, 1),
+                    BackgroundTransparency = 1,
+                    ZIndex = 3,
+                }, {
+                    ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                    ai('UIGradient', {
+                        Rotation = 60,
+                        Color = ColorSequence.new({
+                            ColorSequenceKeypoint.new(0,   Color3.new(1,1,1)),
+                            ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)),
+                            ColorSequenceKeypoint.new(1,   Color3.new(1,1,1)),
+                        }),
+                        Transparency = NumberSequence.new({
+                            NumberSequenceKeypoint.new(0,   0.1),
+                            NumberSequenceKeypoint.new(0.5, 1),
+                            NumberSequenceKeypoint.new(1,   0.1),
+                        }),
                     }),
                 }),
             })
-            local thumbScale = ai('UIScale', { Scale = 1 })
-            local thumb = ai('Frame', {
-                Size = UDim2.fromOffset(26, 17),
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0, 0, 0.5, 0),
-                BackgroundTransparency = 0,
-                ZIndex = 2,
-                ThemeTag = { BackgroundColor3 = 'ToggleSlider' },
-            }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 8) }),
-                thumbScale,
-                thumbHighlight,
-            })
 
-            -- Fill bar (Accent, 0.1 trans like WindUI)
-            local fill = ai('Frame', {
+            -- Fill bar
+            local m = ai('Frame', {
                 Size = UDim2.new(0, 0, 1, 0),
-                BackgroundTransparency = 0.1,
                 ThemeTag = { BackgroundColor3 = 'Accent' },
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(1, 0) }),
-                thumb,
+                k,
             })
 
-            -- Rail (Text color, 0.95 trans like WindUI outer track)
-            local rail = ai('Frame', {
+            -- Value label at right end
+            local n = ai('TextLabel', {
+                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                Text = tostring(f.Default),
+                TextSize = 12,
+                TextWrapped = true,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(0, 30, 0, 14),
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, 0, 0.5, 0),
+                ThemeTag = { TextColor3 = 'SubText' },
+            })
+
+            -- Rail wrapper (leaves room for value label at right)
+            local railWrap = ai('Frame', {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, -34, 1, 0),
+            })
+
+            -- Rail
+            local o = ai('Frame', {
                 Size = UDim2.new(1, 0, 0, 4),
                 AnchorPoint = Vector2.new(0, 0.5),
                 Position = UDim2.new(0, 0, 0.5, 0),
-                BackgroundTransparency = 0.95,
-                ThemeTag = { BackgroundColor3 = 'Text' },
+                BackgroundTransparency = 0.4,
+                ThemeTag = { BackgroundColor3 = 'SliderRail' },
+                Parent = railWrap,
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(1, 0) }),
-                fill,
+                m,
             })
 
-            -- Container (right-anchored, matches WindUI layout)
-            -- valBox sits at the far right, rail fills remaining space
-            local container = ai('Frame', {
-                Size = UDim2.new(1, 0, 0, 24),
+            -- Outer container
+            local outerFrame = ai('Frame', {
+                Size = UDim2.new(1, 0, 0, 4),
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, -10, 0.5, 0),
                 BackgroundTransparency = 1,
                 Parent = j.Frame,
             }, {
-                ai('UISizeConstraint', { MaxSize = Vector2.new(160, math.huge) }),
-                ai('Frame', {
-                    -- rail takes width minus the value label at right
-                    Size = UDim2.new(1, -34, 1, 0),
-                    BackgroundTransparency = 1,
-                }, { rail }),
+                ai('UISizeConstraint', { MaxSize = Vector2.new(150, math.huge) }),
+                railWrap,
+                n,
             })
-            -- Value label pinned to far right of container
-            valBox.Parent = container
-            valBox.AnchorPoint = Vector2.new(1, 0.5)
-            valBox.Position = UDim2.new(1, 0, 0.5, 0)
-            valBox.TextXAlignment = Enum.TextXAlignment.Right
 
-            local _renderConn = nil
+            local _activeTouch = nil
 
-            local function _tween(inst, t, props)
-                _ts:Create(inst, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), props):Play()
-            end
-
-            local function _calcAndSet(posX)
-                local t = math.clamp((posX - rail.AbsolutePosition.X) / rail.AbsoluteSize.X, 0, 1)
-                h:SetValue(h.Min + (h.Max - h.Min) * t)
-            end
-
-            local function _startDrag(inp)
-                i = true
-                local isTouch = inp.UserInputType == Enum.UserInputType.Touch
-                -- WindUI thumb grow on drag start
-                _tween(thumbScale, 0.28, { Scale = 1.3 })
-                _tween(thumb, 0.28, { BackgroundTransparency = 0.85 })
-                _calcAndSet(inp.Position.X)
-                if _renderConn then _renderConn:Disconnect() end
-                _renderConn = _rs.RenderStepped:Connect(function()
-                    _calcAndSet(isTouch and inp.Position.X or af:GetMouseLocation().X)
-                end)
-                inp.Changed:Connect(function()
-                    if inp.UserInputState == Enum.UserInputState.End then
-                        i = false
-                        if _renderConn then _renderConn:Disconnect(); _renderConn = nil end
-                        -- WindUI thumb shrink back
-                        _tween(thumbScale, 0.2, { Scale = 1 })
-                        _tween(thumb, 0.2, { BackgroundTransparency = 0 })
-                    end
-                end)
-            end
-
-            ah.AddSignal(rail.InputBegan, function(p)
-                if p.UserInputType == Enum.UserInputType.MouseButton1
-                or p.UserInputType == Enum.UserInputType.Touch then
-                    _startDrag(p)
+            ah.AddSignal(o.InputBegan, function(p)
+                if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
+                    local s = math.clamp((p.Position.X - o.AbsolutePosition.X) / o.AbsoluteSize.X, 0, 1)
+                    h:SetValue(h.Min + ((h.Max - h.Min) * s))
                 end
             end)
-            ah.AddSignal(thumb.InputBegan, function(p)
-                if p.UserInputType == Enum.UserInputType.MouseButton1
-                or p.UserInputType == Enum.UserInputType.Touch then
-                    _startDrag(p)
+
+            ah.AddSignal(k.InputBegan, function(p)
+                if p.UserInputType == Enum.UserInputType.MouseButton1 then
+                    i = true
+                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.3 }):Play()
+                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+                elseif p.UserInputType == Enum.UserInputType.Touch then
+                    i = true
+                    _activeTouch = p
+                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.3 }):Play()
+                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+                end
+            end)
+            ah.AddSignal(k.InputEnded, function(p)
+                if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
+                    i = false
+                    _activeTouch = nil
+                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
+                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
+                end
+            end)
+            ah.AddSignal(af.InputChanged, function(p)
+                if not i then return end
+                local isMouse = p.UserInputType == Enum.UserInputType.MouseMovement
+                local isTouch = p.UserInputType == Enum.UserInputType.Touch
+                    and (_activeTouch == nil or p == _activeTouch)
+                if isMouse or isTouch then
+                    local s = math.clamp((p.Position.X - o.AbsolutePosition.X) / o.AbsoluteSize.X, 0, 1)
+                    h:SetValue(h.Min + ((h.Max - h.Min) * s))
+                end
+            end)
+            ah.AddSignal(af.InputEnded, function(p)
+                if p.UserInputType == Enum.UserInputType.Touch and p == _activeTouch then
+                    i = false
+                    _activeTouch = nil
+                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
+                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
                 end
             end)
 
@@ -4575,10 +4573,9 @@ local aa = {
             function h.SetValue(p, s)
                 p.Value = g:Round(math.clamp(s, h.Min, h.Max), h.Rounding)
                 local t = (p.Value - h.Min) / (h.Max - h.Min)
-                _ts:Create(fill, TweenInfo.new(0.05), { Size = UDim2.fromScale(t, 1) }):Play()
-                -- Thumb sits at right edge of fill bar
-                thumb.Position = UDim2.new(1, 0, 0.5, 0)
-                valBox.Text = tostring(p.Value)
+                k.Position = UDim2.new(t, 0, 0.5, 0)
+                m.Size = UDim2.fromScale(t, 1)
+                n.Text = tostring(p.Value)
                 g:SafeCallback(h.Callback, p.Value)
                 g:SafeCallback(h.Changed, p.Value)
             end
@@ -4620,106 +4617,48 @@ local aa = {
             h.SetTitle = i.SetTitle
             h.SetDesc = i.SetDesc
 
-            local _uis = game:GetService'UserInputService'
+            local _uis = game:GetService('UserInputService')
 
-            -- WindUI exact dims: pill 40.8w x 24h, thumb frame 20w x 20h
-            local PILL_W  = 40
-            local PILL_H  = 24
-            local THUMB_W = 20
-            local THUMB_H = 20
-            local ON_X    = PILL_W - THUMB_W - 2  -- 18
-            local OFF_X   = 2
-
-            -- Outer container frame — shifted left 8px so pill isn't flush with edge
-            local container = ai('Frame', {
-                Size = UDim2.fromOffset(PILL_W + 2, 26),
-                BackgroundTransparency = 1,
+            -- Pill track (same dims as before, shifted left 8px)
+            local k = ai('UIStroke', {
+                Transparency = 0.5,
+                ThemeTag = { Color = 'ToggleSlider' },
+            })
+            local l = ai('Frame', {
+                Size = UDim2.fromOffset(36, 18),
                 AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, -8, 0.5, 0),
+                Position = UDim2.new(1, -18, 0.5, 0),  -- shifted left 8px vs original -10
                 Parent = i.Frame,
-            })
-
-            -- Pill track: Squircle approx — UICorner r=12, Text color 0.85 trans
-            local pill = ai('Frame', {
-                Size = UDim2.fromOffset(PILL_W, PILL_H),
-                AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(0, PILL_W, 0.5, 0),
-                BackgroundTransparency = 0.85,
-                ThemeTag = { BackgroundColor3 = 'Text' },
-                Parent = container,
-            }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
-            })
-
-            -- Layer: Accent fill, fades in when ON (WindUI: ImageColor3='Toggle' = Accent equiv)
-            local layer = ai('Frame', {
-                Size = UDim2.fromScale(1, 1),
                 BackgroundTransparency = 1,
-                Name = 'Layer',
                 ThemeTag = { BackgroundColor3 = 'Accent' },
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
+                ai('UICorner', { CornerRadius = UDim.new(0, 35) }),
+                k,
             })
-            layer.Parent = pill
 
-            -- Stroke: white gradient outline, fades in when ON
-            local stroke = ai('Frame', {
-                Size = UDim2.fromScale(1, 1),
-                BackgroundTransparency = 1,
-                Name = 'Stroke',
-            }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
-                ai('UIStroke', {
-                    Thickness = 1,
-                    Color = Color3.new(1, 1, 1),
-                    Transparency = 1,
-                }),
-                ai('UIGradient', {
-                    Rotation = 90,
-                    Transparency = NumberSequence.new({
-                        NumberSequenceKeypoint.new(0, 0),
-                        NumberSequenceKeypoint.new(1, 1),
-                    }),
-                }),
-            })
-            stroke.Parent = pill
-
-            -- Thumb mover frame (WindUI: Frame, 20w x 20h, starts at x=2)
-            local thumbFrame = ai('Frame', {
-                Size = UDim2.fromOffset(THUMB_W, THUMB_H),
-                Position = UDim2.new(0, OFF_X, 0.5, 0),
+            -- Slider-style pill thumb (26x17, UICorner r=8, gradient highlight, UIStroke)
+            local thumbScale = ai('UIScale', { Scale = 1 })
+            local j = ai('Frame', {
+                Size = UDim2.fromOffset(14, 14),
                 AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 1,
-                Name = 'Frame',
-            })
-            thumbFrame.Parent = pill
-
-            -- UIScale on Bar for squeeze anim
-            local barScale = ai('UIScale', { Scale = 1 })
-
-            -- Bar: white squircle thumb — same button look as slider thumb
-            local bar = ai('Frame', {
-                Size = UDim2.fromScale(1, 1),
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0.5, 0, 0.5, 0),
-                BackgroundTransparency = 0,
+                Position = UDim2.new(0, 2, 0.5, 0),
                 BackgroundColor3 = Color3.new(1, 1, 1),
-                Name = 'Bar',
+                BackgroundTransparency = 0,
+                ZIndex = 2,
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 10) }),
-                barScale,
+                ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                thumbScale,
                 ai('UIStroke', {
                     Thickness = 1,
-                    Transparency = 0.6,
+                    Transparency = 0.5,
                     ThemeTag = { Color = 'ToggleSlider' },
                 }),
                 ai('Frame', {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
-                    Name = 'Highlight',
                     ZIndex = 3,
                 }, {
-                    ai('UICorner', { CornerRadius = UDim.new(0, 10) }),
+                    ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
                     ai('UIGradient', {
                         Rotation = 60,
                         Color = ColorSequence.new({
@@ -4735,13 +4674,12 @@ local aa = {
                     }),
                 }),
             })
-            bar.Parent = thumbFrame
+            j.Parent = l
 
-            local function _tween(inst, t, props, es, ed)
-                af:Create(inst, TweenInfo.new(t, es or Enum.EasingStyle.Quint, ed or Enum.EasingDirection.Out), props):Play()
-            end
+            local ON_X  = 19
+            local OFF_X = 2
 
-            local _isDragging = false
+            local _dragging = false
             local _startX, _thumbX0 = nil, nil
             local _moved = false
             local _dc, _ec = nil, nil
@@ -4754,17 +4692,13 @@ local aa = {
             function h.SetValue(m, n, _skipCb)
                 n = not not n
                 h.Value = n
-                -- Thumb slide (WindUI: 0.15s Quint Out)
-                _tween(thumbFrame, 0.15, {
-                    Position = UDim2.new(0, n and ON_X or OFF_X, 0.5, 0),
-                })
-                -- Layer fade
-                _tween(layer, 0.1, { BackgroundTransparency = n and 0 or 1 })
-                -- Stroke fade
-                local strokeInst = stroke:FindFirstChildOfClass('UIStroke')
-                if strokeInst then
-                    _tween(strokeInst, 0.1, { Transparency = n and 0.6 or 1 })
-                end
+                ah.OverrideTag(k, { Color = h.Value and 'Accent' or 'ToggleSlider' })
+                af:Create(j, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(0, h.Value and ON_X or OFF_X, 0.5, 0),
+                }):Play()
+                af:Create(l, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = h.Value and 0 or 1,
+                }):Play()
                 if not _skipCb then
                     g:SafeCallback(h.Callback, h.Value)
                     g:SafeCallback(h.Changed, h.Value)
@@ -4780,48 +4714,41 @@ local aa = {
                 if inp.UserInputType ~= Enum.UserInputType.MouseButton1
                 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
 
-                _isDragging = true
-                _moved = false
-                _startX  = inp.Position.X
-                _thumbX0 = thumbFrame.Position.X.Offset
+                _dragging = true
+                _moved    = false
+                _startX   = inp.Position.X
+                _thumbX0  = j.Position.X.Offset
 
-                -- WindUI Bar squeeze: Scale=1.5, ImageTransparency=0.85
-                _tween(barScale, 0.28, { Scale = 1.5 })
-                _tween(bar, 0.28, { BackgroundTransparency = 0.85 })
+                af:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.3 }):Play()
+                af:Create(j, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
 
                 if _dc then _dc:Disconnect() end
                 if _ec then _ec:Disconnect() end
 
                 _dc = _uis.InputChanged:Connect(function(mv)
-                    if not _isDragging then return end
+                    if not _dragging then return end
                     if mv.UserInputType ~= Enum.UserInputType.MouseMovement
                     and mv.UserInputType ~= Enum.UserInputType.Touch then return end
                     local dx = mv.Position.X - _startX
                     if math.abs(dx) > 4 then _moved = true end
                     local nx = math.max(OFF_X, math.min(_thumbX0 + dx, ON_X))
-                    -- WindUI uses 0.05s Linear for live drag
-                    af:Create(thumbFrame, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
-                        Position = UDim2.new(0, nx, 0.5, 0),
-                    }):Play()
-                    -- Live layer alpha
-                    local t = (nx - OFF_X) / (ON_X - OFF_X)
-                    layer.BackgroundTransparency = 1 - t
+                    j.Position = UDim2.new(0, nx, 0.5, 0)
+                    l.BackgroundTransparency = 1 - ((nx - OFF_X) / (ON_X - OFF_X))
                 end)
 
                 _ec = _uis.InputEnded:Connect(function(up)
                     if up.UserInputType ~= Enum.UserInputType.MouseButton1
                     and up.UserInputType ~= Enum.UserInputType.Touch then return end
-                    _isDragging = false
-                    -- WindUI bar unsqueeze: Scale=1, ImageTransparency=0
-                    _tween(barScale, 0.23, { Scale = 1 })
-                    _tween(bar, 0.23, { BackgroundTransparency = 0 })
+                    _dragging = false
+                    af:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+                    af:Create(j, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
                     if _dc then _dc:Disconnect(); _dc = nil end
                     if _ec then _ec:Disconnect(); _ec = nil end
                     if not _moved then
                         h:SetValue(not h.Value)
                     else
-                        local mid = thumbFrame.Position.X.Offset + THUMB_W / 2
-                        h:SetValue(mid > PILL_W / 2)
+                        local mid = j.Position.X.Offset + 7
+                        h:SetValue(mid > 18)
                     end
                     _moved = false
                 end)
