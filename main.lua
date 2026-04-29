@@ -2611,7 +2611,7 @@ local aa = {
             })
 
             local F = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 1, -142),
+                Size = UDim2.new(0, t.TabWidth, 1, -122),
                 Position = UDim2.new(0, 12, 0, 54),
                 BackgroundTransparency = 1,
                 ClipsDescendants = true,
@@ -2623,25 +2623,28 @@ local aa = {
             -- Profile divider line
             local _profileDivider = s('Frame', {
                 Size = UDim2.new(0, t.TabWidth, 0, 1),
-                Position = UDim2.new(0, 12, 1, -76),
+                Position = UDim2.new(0, 12, 1, -58),
                 BackgroundTransparency = 0.6,
                 ThemeTag = {
                     BackgroundColor3 = 'TitleBarLine',
                 },
             })
 
-            -- Profile section (avatar + display name + username)
+            -- Profile section: avatar vertically centered between display name and username
+            -- Total height: 10px top pad + 13px name + 2px gap + 12px username + 10px bot pad = 47px
             local _profileFrame = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 0, 66),
-                Position = UDim2.new(0, 12, 1, -68),
+                Size = UDim2.new(0, t.TabWidth, 0, 50),
+                Position = UDim2.new(0, 12, 1, -52),
                 BackgroundTransparency = 1,
             })
 
             local _lp = game:GetService('Players').LocalPlayer
 
+            -- avatar: vertically centered across both text rows
+            -- name starts at Y=10, username ends at Y=10+13+2+12=37, center = 23.5
             local _avatar = s('ImageLabel', {
-                Size = UDim2.fromOffset(32, 32),
-                Position = UDim2.fromOffset(0, 17),
+                Size = UDim2.fromOffset(28, 28),
+                Position = UDim2.fromOffset(0, 25),
                 AnchorPoint = Vector2.new(0, 0.5),
                 BackgroundTransparency = 0.3,
                 BackgroundColor3 = Color3.fromRGB(40, 40, 50),
@@ -2662,8 +2665,8 @@ local aa = {
                 TextSize = 11,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Center,
-                Size = UDim2.new(0, t.TabWidth - 40, 0, 14),
-                Position = UDim2.fromOffset(40, 16),
+                Size = UDim2.new(0, t.TabWidth - 36, 0, 13),
+                Position = UDim2.fromOffset(36, 12),
                 BackgroundTransparency = 1,
                 TextTruncate = Enum.TextTruncate.AtEnd,
                 ThemeTag = { TextColor3 = 'Text' },
@@ -2676,8 +2679,8 @@ local aa = {
                 TextSize = 10,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Center,
-                Size = UDim2.new(0, t.TabWidth - 40, 0, 12),
-                Position = UDim2.fromOffset(40, 32),
+                Size = UDim2.new(0, t.TabWidth - 36, 0, 12),
+                Position = UDim2.fromOffset(36, 27),
                 BackgroundTransparency = 1,
                 TextTransparency = 0.45,
                 TextTruncate = Enum.TextTruncate.AtEnd,
