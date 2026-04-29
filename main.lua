@@ -2641,54 +2641,55 @@ local aa = {
                 BackgroundTransparency = 1,
             })
 
-            local ProfileWidget = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 0, 68),
-                Position = UDim2.new(0, 12, 1, -74),
-                BackgroundTransparency = 1,
-                ClipsDescendants = false,
-            })
-            s('Frame', {
-                Size = UDim2.new(1, 0, 0, 1),
-                Position = UDim2.fromOffset(0, 0),
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                BackgroundTransparency = 0.85,
-                BorderSizePixel = 0,
-                Parent = ProfileWidget,
-            })
             local ProfileAvatar = s('ImageLabel', {
                 Size = UDim2.fromOffset(32, 32),
-                Position = UDim2.new(0, 0, 0, 10),
-                BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+                Position = UDim2.new(0, 0, 0, 18),
+                BackgroundColor3 = Color3.fromRGB(50, 50, 50),
                 BackgroundTransparency = 0,
                 Image = '',
-                Parent = ProfileWidget,
                 ThemeTag = { BackgroundColor3 = 'ElementBackground' },
             }, {
                 s('UICorner', { CornerRadius = UDim.new(0, 12) }),
             })
             local ProfileName = s('TextLabel', {
-                Size = UDim2.new(1, -40, 0, 16),
-                Position = UDim2.fromOffset(40, 12),
+                Size = UDim2.new(1, -42, 0, 16),
+                Position = UDim2.fromOffset(40, 18),
                 BackgroundTransparency = 1,
                 Text = 'Loading...',
                 FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 TextSize = 12,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextTruncate = Enum.TextTruncate.AtEnd,
-                Parent = ProfileWidget,
                 ThemeTag = { TextColor3 = 'Text' },
             })
             local ProfileUsername = s('TextLabel', {
-                Size = UDim2.new(1, -40, 0, 14),
-                Position = UDim2.fromOffset(40, 30),
+                Size = UDim2.new(1, -42, 0, 13),
+                Position = UDim2.fromOffset(40, 36),
                 BackgroundTransparency = 1,
                 Text = '@...',
                 FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 TextSize = 10,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextTruncate = Enum.TextTruncate.AtEnd,
-                Parent = ProfileWidget,
                 ThemeTag = { TextColor3 = 'SubText' },
+            })
+            local ProfileDivider = s('Frame', {
+                Size = UDim2.new(1, 0, 0, 1),
+                Position = UDim2.fromOffset(0, 8),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                BackgroundTransparency = 0.82,
+                BorderSizePixel = 0,
+            })
+            local ProfileWidget = s('Frame', {
+                Size = UDim2.new(0, t.TabWidth, 0, 72),
+                Position = UDim2.new(0, 12, 1, -78),
+                BackgroundTransparency = 1,
+                ClipsDescendants = false,
+            }, {
+                ProfileDivider,
+                ProfileAvatar,
+                ProfileName,
+                ProfileUsername,
             })
             task.spawn(function()
                 local Players = game:GetService('Players')
