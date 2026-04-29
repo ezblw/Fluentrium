@@ -2644,10 +2644,9 @@ local aa = {
             local ProfileAvatar = s('ImageLabel', {
                 Size = UDim2.fromOffset(32, 32),
                 Position = UDim2.new(0, 0, 0, 18),
-                BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+                BackgroundColor3 = Color3.fromRGB(50, 50, 55),
                 BackgroundTransparency = 0,
                 Image = '',
-                ThemeTag = { BackgroundColor3 = 'ElementBackground' },
             }, {
                 s('UICorner', { CornerRadius = UDim.new(0, 12) }),
             })
