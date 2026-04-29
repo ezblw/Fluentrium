@@ -2652,11 +2652,6 @@ local aa = {
                 Parent = _profileFrame,
             }, {
                 s('UICorner', { CornerRadius = UDim.new(1, 0) }),
-                s('UIStroke', {
-                    Thickness = 1.5,
-                    Transparency = 0.5,
-                    ThemeTag = { Color = 'Accent' },
-                }),
             })
 
             local _profileName = s('TextLabel', {
