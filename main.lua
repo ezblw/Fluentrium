@@ -4501,6 +4501,7 @@ local aa = {
             })
 
             -- Container (right-anchored, matches WindUI layout)
+            -- valBox sits at the far right, rail fills remaining space
             local container = ai('Frame', {
                 Size = UDim2.new(1, 0, 0, 24),
                 AnchorPoint = Vector2.new(1, 0.5),
@@ -4510,11 +4511,16 @@ local aa = {
             }, {
                 ai('UISizeConstraint', { MaxSize = Vector2.new(160, math.huge) }),
                 ai('Frame', {
-                    Size = UDim2.new(1, -38, 1, 0),
+                    -- rail takes width minus the value label at right
+                    Size = UDim2.new(1, -34, 1, 0),
                     BackgroundTransparency = 1,
                 }, { rail }),
-                valBox,
             })
+            -- Value label pinned to far right of container
+            valBox.Parent = container
+            valBox.AnchorPoint = Vector2.new(1, 0.5)
+            valBox.Position = UDim2.new(1, 0, 0.5, 0)
+            valBox.TextXAlignment = Enum.TextXAlignment.Right
 
             local _renderConn = nil
 
@@ -4624,12 +4630,12 @@ local aa = {
             local ON_X    = PILL_W - THUMB_W - 2  -- 18
             local OFF_X   = 2
 
-            -- Outer container frame (2w x 26h spacer, like WindUI ap frame)
+            -- Outer container frame — shifted left 8px so pill isn't flush with edge
             local container = ai('Frame', {
                 Size = UDim2.fromOffset(PILL_W + 2, 26),
                 BackgroundTransparency = 1,
                 AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, 0, 0.5, 0),
+                Position = UDim2.new(1, -8, 0.5, 0),
                 Parent = i.Frame,
             })
 
@@ -4691,7 +4697,7 @@ local aa = {
             -- UIScale on Bar for squeeze anim
             local barScale = ai('UIScale', { Scale = 1 })
 
-            -- Bar: white squircle thumb (WindUI: ImageColor3='ToggleBar'=White)
+            -- Bar: white squircle thumb — same button look as slider thumb
             local bar = ai('Frame', {
                 Size = UDim2.fromScale(1, 1),
                 AnchorPoint = Vector2.new(0.5, 0.5),
@@ -4702,11 +4708,16 @@ local aa = {
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(0, 10) }),
                 barScale,
-                -- SquircleOutline2 highlight gradient (WindUI exact)
+                ai('UIStroke', {
+                    Thickness = 1,
+                    Transparency = 0.6,
+                    ThemeTag = { Color = 'ToggleSlider' },
+                }),
                 ai('Frame', {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
                     Name = 'Highlight',
+                    ZIndex = 3,
                 }, {
                     ai('UICorner', { CornerRadius = UDim.new(0, 10) }),
                     ai('UIGradient', {
