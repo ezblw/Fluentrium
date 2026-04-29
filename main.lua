@@ -1471,7 +1471,7 @@ local aa = {
             local p = {}
 
             p.Title = k('TextLabel', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 TextColor3 = Color3.fromRGB(200, 200, 200),
                 TextSize = 14,
                 TextWrapped = true,
@@ -1592,7 +1592,7 @@ local aa = {
                 s.ButtonHolder,
             })
             s.Title = p('TextLabel', {
-                FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = 'Dialog',
                 TextColor3 = Color3.fromRGB(240, 240, 240),
                 TextSize = 22,
@@ -1693,7 +1693,7 @@ local aa = {
             local q = {}
 
             q.TitleLabel = k('TextLabel', {
-                FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = m,
                 TextColor3 = Color3.fromRGB(240, 240, 240),
                 TextSize = 13,
@@ -1706,7 +1706,7 @@ local aa = {
                 },
             })
             q.DescLabel = k('TextLabel', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = n,
                 TextColor3 = Color3.fromRGB(200, 200, 200),
                 TextSize = 12,
@@ -1846,7 +1846,7 @@ local aa = {
                 RichText = true,
                 TextColor3 = Color3.fromRGB(255, 255, 255),
                 TextTransparency = 0,
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 TextSize = 13,
                 TextXAlignment = 'Left',
                 TextYAlignment = 'Center',
@@ -1858,7 +1858,7 @@ local aa = {
                 },
             })
             r.ContentLabel = n('TextLabel', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = q.Content,
                 TextColor3 = Color3.fromRGB(240, 240, 240),
                 TextSize = 14,
@@ -1873,7 +1873,7 @@ local aa = {
                 },
             })
             r.SubContentLabel = n('TextLabel', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = q.SubContent,
                 TextColor3 = Color3.fromRGB(240, 240, 240),
                 TextSize = 14,
@@ -2083,7 +2083,7 @@ local aa = {
                     RichText = true,
                     Text = k,
                     TextTransparency = 0,
-                    FontFace = Font.new('rbxassetid://12187365364', Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
                     TextSize = 18,
                     TextXAlignment = 'Left',
                     TextYAlignment = 'Center',
@@ -2163,7 +2163,7 @@ local aa = {
                     RichText = true,
                     TextColor3 = Color3.fromRGB(255, 255, 255),
                     TextTransparency = 0,
-                    FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
                     TextSize = 12,
                     TextXAlignment = 'Left',
                     TextYAlignment = 'Center',
@@ -2305,7 +2305,7 @@ local aa = {
             local o = {}
 
             o.Input = l('TextBox', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 TextColor3 = Color3.fromRGB(200, 200, 200),
                 TextSize = 14,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -2496,7 +2496,7 @@ local aa = {
                     l('TextLabel', {
                         RichText = true,
                         Text = n.Title,
-                        FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                        FontFace = Font.fromEnum(Enum.Font.GothamBold),
                         TextSize = 12,
                         TextXAlignment = 'Left',
                         TextYAlignment = 'Center',
@@ -2511,7 +2511,7 @@ local aa = {
                         RichText = true,
                         Text = n.SubTitle,
                         TextTransparency = 0.4,
-                        FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                        FontFace = Font.fromEnum(Enum.Font.GothamBold),
                         TextSize = 12,
                         TextXAlignment = 'Left',
                         TextYAlignment = 'Center',
@@ -2624,7 +2624,7 @@ local aa = {
                 RichText = true,
                 Text = 'Tab',
                 TextTransparency = 0,
-                FontFace = Font.new('rbxassetid://12187365364', Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 TextSize = 28,
                 TextXAlignment = 'Left',
                 TextYAlignment = 'Center',
@@ -2847,7 +2847,7 @@ local aa = {
                 P.Title.Text = O.Title
 
                 local Q = s('TextLabel', {
-                    FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
                     Text = O.Content,
                     TextColor3 = Color3.fromRGB(240, 240, 240),
                     TextSize = 14,
@@ -2929,7 +2929,7 @@ local aa = {
                 TextLabel = {
                     BackgroundColor3 = Color3.new(1, 1, 1),
                     BorderColor3 = Color3.new(0, 0, 0),
-                    Font = Enum.Font.SourceSans,
+                    Font = Enum.Font.GothamBold,
                     Text = '',
                     TextColor3 = Color3.new(0, 0, 0),
                     BackgroundTransparency = 1,
@@ -2939,7 +2939,7 @@ local aa = {
                     BackgroundColor3 = Color3.new(1, 1, 1),
                     BorderColor3 = Color3.new(0, 0, 0),
                     AutoButtonColor = false,
-                    Font = Enum.Font.SourceSans,
+                    Font = Enum.Font.GothamBold,
                     Text = '',
                     TextColor3 = Color3.new(0, 0, 0),
                     TextSize = 14,
@@ -2948,7 +2948,7 @@ local aa = {
                     BackgroundColor3 = Color3.new(1, 1, 1),
                     BorderColor3 = Color3.new(0, 0, 0),
                     ClearTextOnFocus = false,
-                    Font = Enum.Font.SourceSans,
+                    Font = Enum.Font.GothamBold,
                     Text = '',
                     TextColor3 = Color3.new(0, 0, 0),
                     TextSize = 14,
@@ -3203,7 +3203,7 @@ local aa = {
                     return D
                 end, function(D, E)
                     return s('TextLabel', {
-                        FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+                        FontFace = Font.fromEnum(Enum.Font.GothamBold),
                         Text = D,
                         TextColor3 = Color3.fromRGB(240, 240, 240),
                         TextSize = 13,
@@ -3636,7 +3636,7 @@ local aa = {
             l.SetDesc = m.SetDesc
 
             local n, o = e('TextLabel', {
-                FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = 'Value',
                 TextColor3 = Color3.fromRGB(240, 240, 240),
                 TextSize = 13,
@@ -3850,7 +3850,7 @@ local aa = {
                             CornerRadius = UDim.new(0, 12),
                         }),
                     }), e('TextLabel', {
-                        FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                        FontFace = Font.fromEnum(Enum.Font.GothamBold),
                         Text = I,
                         TextColor3 = Color3.fromRGB(200, 200, 200),
                         TextSize = 13,
@@ -4175,7 +4175,7 @@ local aa = {
             h.SetDesc = j.SetDesc
 
             local k = ai('TextLabel', {
-                FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = f.Default,
                 TextColor3 = Color3.fromRGB(240, 240, 240),
                 TextSize = 13,
@@ -4427,7 +4427,7 @@ local aa = {
             })
 
             local valLabel = ai('TextLabel', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
                 Text = tostring(f.Default),
                 TextSize = 12,
                 TextXAlignment = Enum.TextXAlignment.Right,
