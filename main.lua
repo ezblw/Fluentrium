@@ -2195,12 +2195,12 @@ local aa = {
                 BackgroundTransparency = 1,
                 Parent = u.ContainerHolder,
                 Visible = false,
-                BottomImage = 'rbxasset://textures/ui/Scroll/scroll-bottom.png',
-                MidImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+                BottomImage = 'rbxassetid://6889812791',
+                MidImage = 'rbxassetid://6889812721',
                 TopImage = 'rbxassetid://6276641225',
                 ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageTransparency = 1,
-                ScrollBarThickness = 0,
+                ScrollBarImageTransparency = 0.95,
+                ScrollBarThickness = 3,
                 BorderSizePixel = 0,
                 CanvasSize = UDim2.fromScale(0, 0),
                 ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -2611,7 +2611,7 @@ local aa = {
             })
 
             local F = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 1, -142),
+                Size = UDim2.new(0, t.TabWidth, 1, -66),
                 Position = UDim2.new(0, 12, 0, 54),
                 BackgroundTransparency = 1,
                 ClipsDescendants = true,
@@ -2640,69 +2640,6 @@ local aa = {
                 Position = UDim2.fromOffset(t.TabWidth + 26, 90),
                 BackgroundTransparency = 1,
             })
-
-            local ProfileAvatar = s('ImageLabel', {
-                Size = UDim2.fromOffset(32, 32),
-                Position = UDim2.new(0, 0, 0, 18),
-                BackgroundColor3 = Color3.fromRGB(50, 50, 55),
-                BackgroundTransparency = 0,
-                Image = '',
-            }, {
-                s('UICorner', { CornerRadius = UDim.new(0, 12) }),
-            })
-            local ProfileName = s('TextLabel', {
-                Size = UDim2.new(1, -42, 0, 16),
-                Position = UDim2.fromOffset(40, 18),
-                BackgroundTransparency = 1,
-                Text = 'Loading...',
-                FontFace = Font.fromEnum(Enum.Font.GothamBold),
-                TextSize = 12,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                ThemeTag = { TextColor3 = 'Text' },
-            })
-            local ProfileUsername = s('TextLabel', {
-                Size = UDim2.new(1, -42, 0, 13),
-                Position = UDim2.fromOffset(40, 36),
-                BackgroundTransparency = 1,
-                Text = '@...',
-                FontFace = Font.fromEnum(Enum.Font.GothamBold),
-                TextSize = 10,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                ThemeTag = { TextColor3 = 'SubText' },
-            })
-            local ProfileDivider = s('Frame', {
-                Size = UDim2.new(1, 0, 0, 1),
-                Position = UDim2.fromOffset(0, 8),
-                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                BackgroundTransparency = 0.82,
-                BorderSizePixel = 0,
-            })
-            local ProfileWidget = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 0, 72),
-                Position = UDim2.new(0, 12, 1, -78),
-                BackgroundTransparency = 1,
-                ClipsDescendants = false,
-            }, {
-                ProfileDivider,
-                ProfileAvatar,
-                ProfileName,
-                ProfileUsername,
-            })
-            task.spawn(function()
-                local Players = game:GetService('Players')
-                local lp = Players.LocalPlayer
-                if lp then
-                    ProfileName.Text = lp.DisplayName
-                    ProfileUsername.Text = '@' .. lp.Name
-                    local ok, thumb = pcall(function()
-                        return Players:GetUserThumbnailAsync(lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-                    end)
-                    if ok then ProfileAvatar.Image = thumb end
-                end
-            end)
-
             v.Root = s('Frame', {
                 BackgroundTransparency = 1,
                 Size = v.Size,
@@ -2713,7 +2650,6 @@ local aa = {
                 v.TabDisplay,
                 v.ContainerHolder,
                 F,
-                ProfileWidget,
                 E,
             })
             v.TitleBar = e(d.Parent.TitleBar){
@@ -3753,12 +3689,12 @@ local aa = {
                 Size = UDim2.new(1, -5, 1, -10),
                 Position = UDim2.fromOffset(5, 5),
                 BackgroundTransparency = 1,
-                BottomImage = 'rbxasset://textures/ui/Scroll/scroll-bottom.png',
-                MidImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+                BottomImage = 'rbxassetid://6889812791',
+                MidImage = 'rbxassetid://6889812721',
                 TopImage = 'rbxassetid://6276641225',
                 ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageTransparency = 1,
-                ScrollBarThickness = 0,
+                ScrollBarImageTransparency = 0.95,
+                ScrollBarThickness = 4,
                 BorderSizePixel = 0,
                 CanvasSize = UDim2.fromScale(0, 0),
             }, {s})
