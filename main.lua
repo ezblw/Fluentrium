@@ -486,7 +486,6 @@ local aa = {
 
         x.Elements = z
 
-        -- Color() helper: Color("#hex1") or Color("#hex1","#hex2")
         local _windowColors = nil
         local function Color(hex1, hex2)
             local function fromHex(h)
@@ -505,11 +504,10 @@ local aa = {
         if getgenv then getgenv().Color = Color end
 
         function x.CreateWindow(C, D, ...)
-            -- Handle 3-arg method call: library:AddWindow("Title", opts)
-            -- Lua passes: C=self, D="Title", ...=opts
+
             local _extra = select(1, ...)
             if type(C) ~= 'string' and type(D) == 'string' and type(_extra) == 'table' then
-                -- method call form: self, title, optsTable
+
                 local _opts = _extra
                 _opts.Title = D
                 D = _opts
@@ -524,7 +522,6 @@ local aa = {
                 D = { Title = D }
             end
 
-            -- No theme option exposed; always use Dark as base
             local _theme = 'Dark'
             if not D.TabWidth then D.TabWidth = 120 end
 
@@ -539,7 +536,6 @@ local aa = {
             x.UseAcrylic = D.Acrylic
             if D.Acrylic then r.init() end
 
-            -- Resolve size: accept lowercase or uppercase key
             local rawSize = D.size or D.Size or UDim2.fromOffset(580, 460)
             local winSize
             if typeof(rawSize) == 'UDim2' then
@@ -559,17 +555,14 @@ local aa = {
             x.Window = E
             x:SetTheme(_theme)
 
-            -- Resolve colors
             local colors = D.colors or _windowColors
             local _ts = game:GetService('TweenService')
 
-            -- darken helper: amt=1.0 means original, 0.0 means black
             local function darken(c, amt)
                 local h2,s2,v2 = Color3.toHSV(c)
                 return Color3.fromHSV(h2, math.min(s2*1.1,1), v2*(amt or 0.7))
             end
 
-            -- Parent window root directly (no CanvasGroup wrapper - avoids blur/size issues)
             E.Root.Parent = w
 
             local _glassAlpha = D.GlassmorphismAlpha
@@ -582,7 +575,7 @@ local aa = {
                     local paint = E.AcrylicPaint and E.AcrylicPaint.Frame
                     if paint then
                         if alpha == 1 then
-                            -- Fully transparent: vanilla Fluent look
+
                             paint.BackgroundTransparency = 1
                             for _, child in ipairs(paint:GetChildren()) do
                                 if child:IsA('Frame') then
@@ -593,16 +586,14 @@ local aa = {
                                 end
                             end
                         elseif alpha == 0 then
-                            -- Fully opaque: gradient colors already applied, no extra glass
+
                             paint.BackgroundTransparency = 0
                         else
-                            -- Mid-range: tint the background with gradient primary color
-                            -- alpha=0.6 means 60% transparent → the gradient bleeds through nicely
+
                             local tintColor = (colors and colors.primary) or Color3.fromRGB(20, 20, 20)
                             paint.BackgroundColor3 = tintColor
                             paint.BackgroundTransparency = alpha
 
-                            -- Restore/reapply the gradient on top at reduced opacity
                             local eg = paint:FindFirstChildWhichIsA('UIGradient')
                             if not eg then
                                 eg = Instance.new('UIGradient', paint)
@@ -627,15 +618,14 @@ local aa = {
                                     ColorSequenceKeypoint.new(1,    p1),
                                 })
                                 eg.Rotation = 135
-                                -- Transparency of the gradient layer scales with alpha
+
                                 eg.Transparency = NumberSequence.new(alpha * 0.5)
                             end
 
-                            -- Child frames: keep mostly transparent so tinted bg shows
                             for _, child in ipairs(paint:GetChildren()) do
                                 if child:IsA('Frame') then
                                     if child.BackgroundColor3 == Color3.new(0,0,0) then
-                                        -- dark overlay for readability: scale with alpha
+
                                         child.BackgroundTransparency = 0.3 + alpha * 0.45
                                     else
                                         child.BackgroundTransparency = 1
@@ -647,11 +637,11 @@ local aa = {
                             end
                         end
                     end
-                    -- Root frame: always transparent (it's just a container)
+
                     if E.Root then
                         pcall(function() E.Root.BackgroundTransparency = 1 end)
                     end
-                    -- Content area: subtle glass effect scaled with alpha
+
                     if E.ContainerHolder then
                         pcall(function() E.ContainerHolder.GroupTransparency = alpha * 0.25 end)
                     end
@@ -664,7 +654,7 @@ local aa = {
             end
             local function _fadeIn()
                 E.Root.Visible = true
-                -- Quick scale-in pop animation
+
                 pcall(function()
                     local uiScale = E.Root:FindFirstChildOfClass('UIScale')
                     if not uiScale then
@@ -678,7 +668,7 @@ local aa = {
             end
 
             if colors then
-                -- Patch GetThemeProperty so UpdateTheme never resets our colors
+
                 local _origGetThemeProp = p.GetThemeProperty
                 p.GetThemeProperty = function(self, tag)
                     if tag == 'AcrylicMain' then
@@ -701,20 +691,17 @@ local aa = {
                     return _origGetThemeProp(self, tag)
                 end
 
-                -- Apply visible gradient directly by modifying existing AcrylicPaint frames
                 task.defer(function()
                     pcall(function()
                         local paint = E.AcrylicPaint.Frame
 
-                        -- Make the outer paint frame fully opaque with our primary color
                         paint.BackgroundColor3 = colors.primary
                         paint.BackgroundTransparency = 0
 
-                        -- Apply gradient to the outer frame itself
                         local existingGrad = paint:FindFirstChildWhichIsA('UIGradient')
                         if existingGrad then existingGrad:Destroy() end
                         local outerGrad = Instance.new('UIGradient', paint)
-                        -- Shared lerp helper (also used by notification)
+
                         local function lerpColor(a, b, t)
                             return Color3.new(
                                 a.R + (b.R - a.R) * t,
@@ -724,7 +711,7 @@ local aa = {
                         end
                         _G.__lerpColor  = lerpColor
                         _G.__gradColors = colors
-                        -- 8-keypoint gradient: both colors ripple across both sides
+
                         local p1,p2 = colors.primary, colors.secondary
                         outerGrad.Color = ColorSequence.new({
                             ColorSequenceKeypoint.new(0,    p1),
@@ -738,12 +725,11 @@ local aa = {
                         })
                         outerGrad.Rotation = 135
 
-                        -- Hide or neutralise all child frames so they don't cover the gradient
                         for _, child in ipairs(paint:GetChildren()) do
                             if child:IsA('Frame') then
-                                -- Make child frames fully transparent so gradient shows through
+
                                 child.BackgroundTransparency = 1
-                                -- Remove any UIGradient inside children that would override ours
+
                                 local cg = child:FindFirstChildWhichIsA('UIGradient')
                                 if cg then cg:Destroy() end
                             elseif child:IsA('ImageLabel') then
@@ -752,31 +738,27 @@ local aa = {
                             end
                         end
 
-                        -- Add a subtle dark overlay on top for readability (very light)
                         local overlay = Instance.new('Frame', paint)
                         overlay.Size = UDim2.fromScale(1,1)
                         overlay.BackgroundColor3 = Color3.new(0,0,0)
                         overlay.BackgroundTransparency = 0.55
                         overlay.BorderSizePixel = 0
-                        Instance.new('UICorner', overlay).CornerRadius = UDim.new(0,35)
+                        Instance.new('UICorner', overlay).CornerRadius = UDim.new(0, 12)
 
-                        -- Thin glowing border
                         local stroke = Instance.new('UIStroke', paint)
                         stroke.Thickness = 1.5
                         stroke.Color = colors.secondary
                         stroke.Transparency = 0.3
 
                         p.UpdateTheme()
-                        -- Apply glassmorphism after colors are set
+
                         task.defer(_applyGlass)
                     end)
                 end)
             end
 
-            -- Apply glassmorphism on initial load
             task.defer(_applyGlass)
 
-            -- Circle minimise
             local circleOpts = D.circle or {}
             local circleSize  = circleOpts.size  or 56
             local circleImage = circleOpts.image or ''
@@ -804,7 +786,7 @@ local aa = {
                 btn.ScaleType = Enum.ScaleType.Fit
                 btn.Parent = gui
 
-                Instance.new('UICorner', btn).CornerRadius = UDim.new(1,0)
+                Instance.new('UICorner', btn).CornerRadius = UDim.new(0, 12)
 
                 local stroke = Instance.new('UIStroke', btn)
                 stroke.Thickness = 2.5
@@ -816,7 +798,6 @@ local aa = {
                     g.Rotation = 135
                 end
 
-                -- Drag
                 local dragging, dragStart, startPos, _moved = false, nil, nil, false
                 btn.InputBegan:Connect(function(inp)
                     if inp.UserInputType == Enum.UserInputType.MouseButton1
@@ -855,7 +836,6 @@ local aa = {
                 _circleGui = gui
             end
 
-            -- Override Minimize synchronously so title bar + keybind both use it
             local function _doMinimize()
                 E.Minimized = not E.Minimized
                 if E.Minimized then
@@ -871,12 +851,10 @@ local aa = {
             E.Minimize = _doMinimize
             E._customMinimize = _doMinimize
 
-            -- Resize handle
             do
                 local _uis = game:GetService('UserInputService')
                 local _ts3 = game:GetService('TweenService')
 
-                -- corner grip button (bottom-right of Root)
                 local resizeHandle = Instance.new('Frame')
                 resizeHandle.Name = 'ResizeHandle'
                 resizeHandle.Size = UDim2.fromOffset(32, 32)
@@ -901,11 +879,9 @@ local aa = {
                 local _resizeStart = nil
                 local _sizeAtStart = nil
 
-                -- min/max clamp values
                 local _minW, _minH = 400, 300
                 local _maxW, _maxH = 900, 700
 
-                -- fade icon in/out
                 local function _setHandleAlpha(alpha, dur)
                     _ts3:Create(resizeIcon, TweenInfo.new(dur or 0.15), {ImageTransparency = alpha}):Play()
                 end
@@ -946,22 +922,10 @@ local aa = {
                 end)
             end
 
-            -- Build lib handle
-            -- Mirrors the reference library API exactly:
-            --   window_data:AddTab(name)           -> tab_data
-            --   tab_data:AddFolder(name)           -> folder_data  (inherits all tab methods)
-            --   tab_data:AddSwitch(text, cb)       -> switch_data  (switch_data:Set(bool))
-            --   tab_data:AddSlider(text, cb, opts) -> slider_data  (slider_data:Set(val))
-            --   tab_data:AddLabel(text)            -> label proxy  (.Text = "..." works)
-            --   tab_data:AddButton(text, cb)       -> button obj
-            --   tab_data:AddTextBox(text, cb)      -> textbox obj
-            --   tab_data:AddDropdown(name, cb)     -> dropdown_data (dropdown_data:Add(n))
-
             local lib = {}
             local _tabCount = 0
             local _win = E
 
-            -- Label proxy: lets script do label.Text = "..." directly
             local function _labelProxy(elem, initText)
                 return setmetatable({}, {
                     __index = function(_, k)
@@ -980,7 +944,6 @@ local aa = {
                 })
             end
 
-            -- Switch wrapper: exposes :Set(bool) matching reference library
             local function _switchWrap(fluentToggle)
                 local sw = {}
                 function sw:Set(bool)
@@ -990,7 +953,6 @@ local aa = {
                 return sw
             end
 
-            -- Slider wrapper: exposes :Set(value) matching reference library
             local function _sliderWrap(fluentSlider, opts)
                 local sd = {}
                 function sd:Set(val)
@@ -1000,7 +962,6 @@ local aa = {
                 return sd
             end
 
-            -- Dropdown wrapper: exposes :Add(name) and :Refresh(list)
             local function _dropdownWrap(fluentDD, initValues)
                 local dd = {}
                 local _values = initValues and {table.unpack(initValues)} or {}
@@ -1023,7 +984,6 @@ local aa = {
                 return dd
             end
 
-            -- Build a tab handle with all Add* methods routing to a Fluent tab
             local function _makeTabHandle(ft, myIndex)
                 local tab_data = {}
 
@@ -1079,7 +1039,7 @@ local aa = {
                 end
 
                 function tab_data:AddDropdown(name, valuesOrCb, cb)
-                    -- Support both (name, cb) and (name, values, cb) call forms
+
                     local initValues, callback
                     if type(valuesOrCb) == 'table' then
                         initValues = valuesOrCb
@@ -1098,9 +1058,9 @@ local aa = {
                 end
 
                 function tab_data:AddFolder(name)
-                    -- AddSection is visual only in Fluent; items still go into the tab
+
                     pcall(function() ft:AddSection(tostring(name or '')) end)
-                    -- Return a folder_data that inherits all tab methods (same as reference lib)
+
                     local folder_data = {}
                     for k, v in pairs(tab_data) do
                         folder_data[k] = v
@@ -1111,7 +1071,6 @@ local aa = {
                 return tab_data
             end
 
-            -- window:AddTab(name) -> tab handle
             function lib:AddTab(name)
                 _tabCount = _tabCount + 1
                 local ft = _win:AddTab(tostring(name or 'Tab'))
@@ -1359,7 +1318,7 @@ local aa = {
                     ImageTransparency = 0.7,
                 }),
                 j('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 j('Frame', {
                     BackgroundTransparency = 0.45,
@@ -1370,7 +1329,7 @@ local aa = {
                     },
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                 }),
                 j('Frame', {
@@ -1379,7 +1338,7 @@ local aa = {
                     Size = UDim2.fromScale(1, 1),
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     j('UIGradient', {
                         Rotation = 90,
@@ -1397,7 +1356,7 @@ local aa = {
                     BackgroundTransparency = 1,
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                 }),
                 j('ImageLabel', {
@@ -1412,7 +1371,7 @@ local aa = {
                     },
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                 }),
                 j('Frame', {
@@ -1421,7 +1380,7 @@ local aa = {
                     ZIndex = 2,
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     j('UIStroke', {
                         Transparency = 0.5,
@@ -1534,7 +1493,7 @@ local aa = {
                 },
             }, {
                 k('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
             })
             p.Frame = k('TextButton', {
@@ -1545,7 +1504,7 @@ local aa = {
                 },
             }, {
                 k('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 k('UIStroke', {
                     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
@@ -1598,7 +1557,7 @@ local aa = {
                 Parent = q.Window.Root,
             }, {
                 p('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
             })
 
@@ -1661,7 +1620,7 @@ local aa = {
                 },
             }, {
                 p('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 p('UIStroke', {
                     Transparency = 0.5,
@@ -1801,7 +1760,7 @@ local aa = {
                 },
             }, {
                 k('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 q.Border,
                 q.LabelHolder,
@@ -2031,20 +1990,19 @@ local aa = {
 
             r:Open()
 
-            -- Apply gradient colors + forced glassmorphism to notification
             task.defer(function()
                 pcall(function()
                     local nColors = _G.__gradColors
                     local nLerp   = _G.__lerpColor
                     if nColors and nLerp and r.AcrylicPaint and r.AcrylicPaint.Frame then
                         local npaint = r.AcrylicPaint.Frame
-                        -- Force glass: make backing semi-transparent
+
                         npaint.BackgroundTransparency = 0.35
                         npaint.BackgroundColor3 = nColors.primary
-                        -- Remove old gradient
+
                         local eg = npaint:FindFirstChildWhichIsA('UIGradient')
                         if eg then eg:Destroy() end
-                        -- Apply matching 8-keypoint gradient
+
                         local ng = Instance.new('UIGradient', npaint)
                         local p1,p2 = nColors.primary, nColors.secondary
                         ng.Color = ColorSequence.new({
@@ -2058,7 +2016,7 @@ local aa = {
                             ColorSequenceKeypoint.new(1,    p1),
                         })
                         ng.Rotation = 135
-                        -- Hide child frames that would cover gradient
+
                         for _, child in ipairs(npaint:GetChildren()) do
                             if child:IsA('Frame') then
                                 child.BackgroundTransparency = 1
@@ -2069,14 +2027,14 @@ local aa = {
                                 child.BackgroundTransparency = 1
                             end
                         end
-                        -- Dark overlay for text readability
+
                         local ov = Instance.new('Frame', npaint)
                         ov.Size = UDim2.fromScale(1,1)
                         ov.BackgroundColor3 = Color3.new(0,0,0)
                         ov.BackgroundTransparency = 0.6
                         ov.BorderSizePixel = 0
                         Instance.new('UICorner', ov).CornerRadius = UDim.new(0, 12)
-                        -- Glowing border matching secondary color
+
                         local ns = Instance.new('UIStroke', npaint)
                         ns.Thickness = 1.2
                         ns.Color = nColors.secondary
@@ -2196,7 +2154,7 @@ local aa = {
                 },
             }, {
                 k('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 k('TextLabel', {
                     AnchorPoint = Vector2.new(0, 0.5),
@@ -2388,7 +2346,7 @@ local aa = {
                 },
             }, {
                 l('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 l('UIStroke', {
                     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
@@ -2482,7 +2440,7 @@ local aa = {
                     },
                 }, {
                     l('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     l('ImageLabel', {
                         Image = o,
@@ -2630,7 +2588,7 @@ local aa = {
                 },
             }, {
                 s('UICorner', {
-                    CornerRadius = UDim.new(0, 2),
+                    CornerRadius = UDim.new(0, 12),
                 }),
             }), s('Frame', {
                 Size = UDim2.fromOffset(20, 20),
@@ -2853,7 +2811,7 @@ local aa = {
             end)
 
             function v.Minimize(M)
-                -- Delegate to custom override if set (set by AddWindow wrapper)
+
                 if v._customMinimize then
                     v._customMinimize()
                     return
@@ -3213,7 +3171,7 @@ local aa = {
                 Parent = A.Frame,
             }, {
                 s('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
             })
             local aa, ab = s('ImageLabel', {
@@ -3227,7 +3185,7 @@ local aa = {
                 TileSize = UDim2.fromOffset(40, 40),
             }, {
                 s('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 B,
             }), function()
@@ -3283,7 +3241,7 @@ local aa = {
                     Parent = C.Root,
                 }, {
                     s('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     K,
                 }), s('Frame', {
@@ -3292,7 +3250,7 @@ local aa = {
                     BackgroundTransparency = z.Transparency,
                 }, {
                     s('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                 })
                 local N, O = s('ImageLabel', {
@@ -3306,7 +3264,7 @@ local aa = {
                     Parent = C.Root,
                 }, {
                     s('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     s('UIStroke', {
                         Thickness = 2,
@@ -3319,7 +3277,7 @@ local aa = {
                     BackgroundTransparency = 0,
                 }, {
                     s('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                 })
                 local P, Q = s('ImageLabel', {
@@ -3333,7 +3291,7 @@ local aa = {
                     Parent = C.Root,
                 }, {
                     s('UICorner', {
-                        CornerRadius = UDim.new(0, 35),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     s('UIStroke', {
                         Thickness = 2,
@@ -3367,7 +3325,7 @@ local aa = {
                     Parent = C.Root,
                 }, {
                     s('UICorner', {
-                        CornerRadius = UDim.new(1, 0),
+                        CornerRadius = UDim.new(0, 12),
                     }),
                     R,
                     S,
@@ -3432,7 +3390,7 @@ local aa = {
                             Rotation = 270,
                         }),
                         s('UICorner', {
-                            CornerRadius = UDim.new(1, 0),
+                            CornerRadius = UDim.new(0, 12),
                         }),
                     })
                     _ = s('Frame', {
@@ -3442,7 +3400,7 @@ local aa = {
                         BackgroundTransparency = 1,
                     }, {
                         s('UICorner', {
-                            CornerRadius = UDim.new(1, 0),
+                            CornerRadius = UDim.new(0, 12),
                         }),
                         s('ImageLabel', {
                             Image = 'http://www.roblox.com/asset/?id=14204231522',
@@ -3454,7 +3412,7 @@ local aa = {
                             Parent = C.Root,
                         }, {
                             s('UICorner', {
-                                CornerRadius = UDim.new(1, 0),
+                                CornerRadius = UDim.new(0, 12),
                             }),
                         }),
                         ab,
@@ -3713,7 +3671,7 @@ local aa = {
                 },
             }, {
                 e('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 e('UIStroke', {
                     Transparency = 0.5,
@@ -3748,7 +3706,7 @@ local aa = {
             }, {
                 t,
                 e('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 e('UIStroke', {
                     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
@@ -3889,7 +3847,7 @@ local aa = {
                         },
                     }, {
                         e('UICorner', {
-                            CornerRadius = UDim.new(0, 2),
+                            CornerRadius = UDim.new(0, 12),
                         }),
                     }), e('TextLabel', {
                         FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
@@ -3920,7 +3878,7 @@ local aa = {
                         K,
                         L,
                         e('UICorner', {
-                            CornerRadius = UDim.new(0, 35),
+                            CornerRadius = UDim.new(0, 12),
                         }),
                     }))
 
@@ -4244,7 +4202,7 @@ local aa = {
                 },
             }, {
                 ai('UICorner', {
-                    CornerRadius = UDim.new(0, 35),
+                    CornerRadius = UDim.new(0, 12),
                 }),
                 ai('UIPadding', {
                     PaddingLeft = UDim.new(0, 8),
@@ -4428,7 +4386,6 @@ local aa = {
             h.SetTitle = j.SetTitle
             h.SetDesc = j.SetDesc
 
-            -- Pill thumb (26x14, white, gradient highlight — same as toggle)
             local tScale = Instance.new('UIScale')
             tScale.Scale = 1
             local thumb = ai('Frame', {
@@ -4438,13 +4395,13 @@ local aa = {
                 BackgroundColor3 = Color3.new(1, 1, 1),
                 ZIndex = 3,
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                 tScale,
                 ai('UIStroke', { Thickness = 1, Transparency = 0.55, ThemeTag = { Color = 'SliderRail' } }),
                 ai('Frame', {
                     Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, ZIndex = 4,
                 }, {
-                    ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                    ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                     ai('UIGradient', {
                         Rotation = 60,
                         Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, Color3.new(1,1,1)) }),
@@ -4453,13 +4410,11 @@ local aa = {
                 }),
             })
 
-            -- Fill (Accent color)
             local fill = ai('Frame', {
                 Size = UDim2.new(0, 0, 1, 0),
                 ThemeTag = { BackgroundColor3 = 'Accent' },
-            }, { ai('UICorner', { CornerRadius = UDim.new(1, 0) }) })
+            }, { ai('UICorner', { CornerRadius = UDim.new(0, 12) }) })
 
-            -- Rail (4px tall, clips thumb via ZIndex)
             local rail = ai('Frame', {
                 Size = UDim2.new(1, 0, 0, 4),
                 AnchorPoint = Vector2.new(0, 0.5),
@@ -4467,11 +4422,10 @@ local aa = {
                 BackgroundTransparency = 0.4,
                 ThemeTag = { BackgroundColor3 = 'SliderRail' },
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(1, 0) }),
+                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                 fill, thumb,
             })
 
-            -- Value label right-anchored
             local valLabel = ai('TextLabel', {
                 FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
                 Text = tostring(f.Default),
@@ -4484,7 +4438,6 @@ local aa = {
                 ThemeTag = { TextColor3 = 'SubText' },
             })
 
-            -- Outer frame parented to element
             local outer = ai('Frame', {
                 Size = UDim2.new(1, 0, 0, 20),
                 AnchorPoint = Vector2.new(1, 0.5),
@@ -4493,7 +4446,7 @@ local aa = {
                 Parent = j.Frame,
             }, {
                 ai('UISizeConstraint', { MaxSize = Vector2.new(150, math.huge) }),
-                -- rail wrapper: full width minus 32px for value label
+
                 ai('Frame', { Size = UDim2.new(1, -32, 1, 0), BackgroundTransparency = 1 }, { rail }),
                 valLabel,
             })
@@ -4508,7 +4461,7 @@ local aa = {
             end
 
             local function _apply(screenX)
-                -- use rail absolute position for accuracy
+
                 local rx = rail.AbsolutePosition.X
                 local rw = rail.AbsoluteSize.X
                 if rw == 0 then return end
@@ -4587,7 +4540,6 @@ local aa = {
 
             local _uis = game:GetService'UserInputService'
 
-            -- Pill thumb — SAME as slider: 26x14, white, UICorner r=7, gradient highlight
             local tScale = Instance.new('UIScale')
             tScale.Scale = 1
             local j = ai('Frame', {
@@ -4597,13 +4549,13 @@ local aa = {
                 BackgroundColor3 = Color3.new(1, 1, 1),
                 ZIndex = 2,
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                 tScale,
                 ai('UIStroke', { Thickness = 1, Transparency = 0.55, ThemeTag = { Color = 'ToggleSlider' } }),
                 ai('Frame', {
                     Size = UDim2.fromScale(1,1), BackgroundTransparency = 1, ZIndex = 3,
                 }, {
-                    ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
+                    ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                     ai('UIGradient', {
                         Rotation = 60,
                         Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, Color3.new(1,1,1)) }),
@@ -4614,7 +4566,6 @@ local aa = {
 
             local k = ai('UIStroke', { Transparency = 0.5, ThemeTag = { Color = 'ToggleSlider' } })
 
-            -- Pill track — wide enough for 26px thumb with margins
             local l = ai('Frame', {
                 Size = UDim2.fromOffset(46, 18),
                 AnchorPoint = Vector2.new(1, 0.5),
@@ -4623,7 +4574,7 @@ local aa = {
                 BackgroundTransparency = 1,
                 ThemeTag = { BackgroundColor3 = 'Accent' },
             }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 35) }),
+                ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                 k, j,
             })
 
