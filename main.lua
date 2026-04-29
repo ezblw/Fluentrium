@@ -2199,8 +2199,8 @@ local aa = {
                 MidImage = 'rbxassetid://6889812721',
                 TopImage = 'rbxassetid://6276641225',
                 ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                ScrollBarImageTransparency = 1,
-                ScrollBarThickness = 0,
+                ScrollBarImageTransparency = 0.95,
+                ScrollBarThickness = 3,
                 BorderSizePixel = 0,
                 CanvasSize = UDim2.fromScale(0, 0),
                 ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -2611,78 +2611,13 @@ local aa = {
             })
 
             local F = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 1, -142),
+                Size = UDim2.new(0, t.TabWidth, 1, -66),
                 Position = UDim2.new(0, 12, 0, 54),
                 BackgroundTransparency = 1,
                 ClipsDescendants = true,
             }, {
                 v.TabHolder,
                 D,
-            })
-
-            -- Profile divider line
-            local _profileDivider = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 0, 1),
-                Position = UDim2.new(0, 12, 1, -76),
-                BackgroundTransparency = 0.6,
-                ThemeTag = {
-                    BackgroundColor3 = 'TitleBarLine',
-                },
-            })
-
-            -- Profile section (avatar + display name + username)
-            local _profileFrame = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 0, 66),
-                Position = UDim2.new(0, 12, 1, -68),
-                BackgroundTransparency = 1,
-            })
-
-            local _lp = game:GetService('Players').LocalPlayer
-
-            local _avatar = s('ImageLabel', {
-                Size = UDim2.fromOffset(32, 32),
-                Position = UDim2.fromOffset(0, 17),
-                AnchorPoint = Vector2.new(0, 0.5),
-                BackgroundTransparency = 0.3,
-                BackgroundColor3 = Color3.fromRGB(40, 40, 50),
-                Image = 'https://www.roblox.com/headshot-thumbnail/image?userId=' .. _lp.UserId .. '&width=100&height=100&format=png',
-                Parent = _profileFrame,
-            }, {
-                s('UICorner', { CornerRadius = UDim.new(1, 0) }),
-                s('UIStroke', {
-                    Thickness = 1.5,
-                    Transparency = 0.5,
-                    ThemeTag = { Color = 'Accent' },
-                }),
-            })
-
-            local _profileName = s('TextLabel', {
-                Text = _lp.DisplayName,
-                FontFace = Font.fromEnum(Enum.Font.GothamBold),
-                TextSize = 11,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextYAlignment = Enum.TextYAlignment.Center,
-                Size = UDim2.new(0, t.TabWidth - 40, 0, 14),
-                Position = UDim2.fromOffset(40, 16),
-                BackgroundTransparency = 1,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                ThemeTag = { TextColor3 = 'Text' },
-                Parent = _profileFrame,
-            })
-
-            local _profileUser = s('TextLabel', {
-                Text = '@' .. _lp.Name,
-                FontFace = Font.fromEnum(Enum.Font.GothamBold),
-                TextSize = 10,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextYAlignment = Enum.TextYAlignment.Center,
-                Size = UDim2.new(0, t.TabWidth - 40, 0, 12),
-                Position = UDim2.fromOffset(40, 32),
-                BackgroundTransparency = 1,
-                TextTransparency = 0.45,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                ThemeTag = { TextColor3 = 'Text' },
-                Parent = _profileFrame,
             })
 
             v.TabDisplay = s('TextLabel', {
@@ -2716,8 +2651,6 @@ local aa = {
                 v.ContainerHolder,
                 F,
                 E,
-                _profileDivider,
-                _profileFrame,
             })
             v.TitleBar = e(d.Parent.TitleBar){
                 Title = t.Title,
