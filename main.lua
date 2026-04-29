@@ -876,6 +876,7 @@ local aa = {
                 local _uis = game:GetService('UserInputService')
                 local _ts3 = game:GetService('TweenService')
 
+                -- corner grip button (bottom-right of Root)
                 local resizeHandle = Instance.new('Frame')
                 resizeHandle.Name = 'ResizeHandle'
                 resizeHandle.Size = UDim2.fromOffset(32, 32)
@@ -886,6 +887,7 @@ local aa = {
                 resizeHandle.Active = true
                 resizeHandle.Parent = E.Root
 
+                -- WindUI resize icon, always visible
                 local resizeIcon = Instance.new('ImageLabel')
                 resizeIcon.Size = UDim2.fromOffset(96, 96)
                 resizeIcon.Position = UDim2.new(0.5, -16, 0.5, -16)
@@ -899,8 +901,15 @@ local aa = {
                 local _isResizing = false
                 local _resizeStart = nil
                 local _sizeAtStart = nil
+
+                -- min/max clamp values
                 local _minW, _minH = 400, 300
                 local _maxW, _maxH = 900, 700
+
+                -- fade icon in/out
+                local function _setHandleAlpha(alpha, dur)
+                    _ts3:Create(resizeIcon, TweenInfo.new(dur or 0.15), {ImageTransparency = alpha}):Play()
+                end
 
                 resizeHandle.MouseEnter:Connect(function()
                     if not _isResizing then
@@ -912,13 +921,14 @@ local aa = {
                         _ts3:Create(resizeIcon, TweenInfo.new(0.15), {ImageTransparency = 0.5}):Play()
                     end
                 end)
+
                 resizeHandle.InputBegan:Connect(function(inp)
                     if inp.UserInputType == Enum.UserInputType.MouseButton1
                     or inp.UserInputType == Enum.UserInputType.Touch then
                         _isResizing = true
                         _resizeStart = inp.Position
                         _sizeAtStart = E.Root.Size
-                        _ts3:Create(resizeIcon, TweenInfo.new(0.1), {ImageTransparency = 0.1}):Play()
+                        _ts3:Create(resizeIcon, TweenInfo.new(0.1), {ImageTransparency = 0.05}):Play()
                         inp.Changed:Connect(function()
                             if inp.UserInputState == Enum.UserInputState.End then
                                 _isResizing = false
@@ -927,6 +937,7 @@ local aa = {
                         end)
                     end
                 end)
+
                 _uis.InputChanged:Connect(function(inp)
                     if _isResizing and (
                         inp.UserInputType == Enum.UserInputType.MouseMovement
@@ -4411,12 +4422,12 @@ local aa = {
             assert(f.Max ~= nil, 'Slider - Missing maximum value.')
             f.Rounding = f.Rounding or 1
 
-            local h, i, j = {
+            local h, _dragging, j = {
                 Value = nil,
                 Min = f.Min,
                 Max = f.Max,
                 Rounding = f.Rounding,
-                Callback = f.Callback or function(h) end,
+                Callback = f.Callback or function() end,
                 Type = 'Slider',
             }, false, ac(aj.Element)(f.Title, f.Description, d.Container, false)
 
@@ -4424,23 +4435,18 @@ local aa = {
             h.SetTitle = j.SetTitle
             h.SetDesc = j.SetDesc
 
-            -- Slider-style pill thumb (same as toggle thumb)
+            -- Pill thumb (26x14, same shape for slider and toggle)
             local thumbScale = ai('UIScale', { Scale = 1 })
-            local k = ai('Frame', {
+            local thumb = ai('Frame', {
+                Size = UDim2.fromOffset(26, 14),
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.new(0, 0, 0.5, 0),
-                Size = UDim2.fromOffset(14, 14),
                 BackgroundColor3 = Color3.new(1, 1, 1),
-                BackgroundTransparency = 0,
                 ZIndex = 2,
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
                 thumbScale,
-                ai('UIStroke', {
-                    Thickness = 1,
-                    Transparency = 0.5,
-                    ThemeTag = { Color = 'ToggleSlider' },
-                }),
+                ai('UIStroke', { Thickness = 1, Transparency = 0.55, ThemeTag = { Color = 'SliderRail' } }),
                 ai('Frame', {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
@@ -4463,106 +4469,100 @@ local aa = {
                 }),
             })
 
-            -- Fill bar
-            local m = ai('Frame', {
+            -- Fill bar (Accent)
+            local fill = ai('Frame', {
                 Size = UDim2.new(0, 0, 1, 0),
                 ThemeTag = { BackgroundColor3 = 'Accent' },
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(1, 0) }),
-                k,
             })
 
-            -- Value label at right end
-            local n = ai('TextLabel', {
-                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
-                Text = tostring(f.Default),
-                TextSize = 12,
-                TextWrapped = true,
-                TextXAlignment = Enum.TextXAlignment.Right,
-                BackgroundTransparency = 1,
-                Size = UDim2.new(0, 30, 0, 14),
-                AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, 0, 0.5, 0),
-                ThemeTag = { TextColor3 = 'SubText' },
-            })
-
-            -- Rail wrapper (leaves room for value label at right)
-            local railWrap = ai('Frame', {
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1, -34, 1, 0),
-            })
-
-            -- Rail
-            local o = ai('Frame', {
+            -- Rail (4px tall pill)
+            local rail = ai('Frame', {
                 Size = UDim2.new(1, 0, 0, 4),
                 AnchorPoint = Vector2.new(0, 0.5),
                 Position = UDim2.new(0, 0, 0.5, 0),
                 BackgroundTransparency = 0.4,
                 ThemeTag = { BackgroundColor3 = 'SliderRail' },
-                Parent = railWrap,
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(1, 0) }),
-                m,
+                fill,
+                thumb,
             })
 
-            -- Outer container
-            local outerFrame = ai('Frame', {
-                Size = UDim2.new(1, 0, 0, 4),
+            -- Value label pinned to right end
+            local valLabel = ai('TextLabel', {
+                FontFace = Font.new'rbxasset://fonts/families/GothamSSm.json',
+                Text = tostring(f.Default),
+                TextSize = 12,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(0, 28, 0, 14),
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, 0, 0.5, 0),
+                ThemeTag = { TextColor3 = 'SubText' },
+            })
+
+            -- Outer container: rail wrapper + value label at right
+            local outer = ai('Frame', {
+                Size = UDim2.new(1, 0, 0, 20),
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, -10, 0.5, 0),
                 BackgroundTransparency = 1,
                 Parent = j.Frame,
             }, {
                 ai('UISizeConstraint', { MaxSize = Vector2.new(150, math.huge) }),
-                railWrap,
-                n,
+                -- rail wrapper leaves 32px gap at right for value label
+                ai('Frame', {
+                    Size = UDim2.new(1, -32, 1, 0),
+                    BackgroundTransparency = 1,
+                }, { rail }),
+                valLabel,
             })
 
-            local _activeTouch = nil
+            local _renderConn = nil
 
-            ah.AddSignal(o.InputBegan, function(p)
-                if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
-                    local s = math.clamp((p.Position.X - o.AbsolutePosition.X) / o.AbsoluteSize.X, 0, 1)
-                    h:SetValue(h.Min + ((h.Max - h.Min) * s))
-                end
-            end)
+            local function _stopDrag()
+                _dragging = false
+                if _renderConn then _renderConn:Disconnect(); _renderConn = nil end
+                _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
+                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0 }):Play()
+            end
 
-            ah.AddSignal(k.InputBegan, function(p)
-                if p.UserInputType == Enum.UserInputType.MouseButton1 then
-                    i = true
-                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.3 }):Play()
-                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
-                elseif p.UserInputType == Enum.UserInputType.Touch then
-                    i = true
-                    _activeTouch = p
-                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.3 }):Play()
-                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+            local function _setFromX(screenX)
+                local t = math.clamp(
+                    (screenX - rail.AbsolutePosition.X) / rail.AbsoluteSize.X,
+                    0, 1
+                )
+                h:SetValue(h.Min + (h.Max - h.Min) * t)
+            end
+
+            local function _startDrag(inp)
+                _dragging = true
+                _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.35 }):Play()
+                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0.6 }):Play()
+                local isTouch = inp.UserInputType == Enum.UserInputType.Touch
+                if _renderConn then _renderConn:Disconnect() end
+                _renderConn = _rs.RenderStepped:Connect(function()
+                    _setFromX(isTouch and inp.Position.X or af:GetMouseLocation().X)
+                end)
+                inp.Changed:Connect(function()
+                    if inp.UserInputState == Enum.UserInputState.End then
+                        _stopDrag()
+                    end
+                end)
+            end
+
+            ah.AddSignal(rail.InputBegan, function(p)
+                if p.UserInputType == Enum.UserInputType.MouseButton1
+                or p.UserInputType == Enum.UserInputType.Touch then
+                    _startDrag(p)
                 end
             end)
-            ah.AddSignal(k.InputEnded, function(p)
-                if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
-                    i = false
-                    _activeTouch = nil
-                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
-                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
-                end
-            end)
-            ah.AddSignal(af.InputChanged, function(p)
-                if not i then return end
-                local isMouse = p.UserInputType == Enum.UserInputType.MouseMovement
-                local isTouch = p.UserInputType == Enum.UserInputType.Touch
-                    and (_activeTouch == nil or p == _activeTouch)
-                if isMouse or isTouch then
-                    local s = math.clamp((p.Position.X - o.AbsolutePosition.X) / o.AbsoluteSize.X, 0, 1)
-                    h:SetValue(h.Min + ((h.Max - h.Min) * s))
-                end
-            end)
-            ah.AddSignal(af.InputEnded, function(p)
-                if p.UserInputType == Enum.UserInputType.Touch and p == _activeTouch then
-                    i = false
-                    _activeTouch = nil
-                    _ts:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
-                    _ts:Create(k, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
+            ah.AddSignal(thumb.InputBegan, function(p)
+                if p.UserInputType == Enum.UserInputType.MouseButton1
+                or p.UserInputType == Enum.UserInputType.Touch then
+                    _startDrag(p)
                 end
             end)
 
@@ -4573,9 +4573,9 @@ local aa = {
             function h.SetValue(p, s)
                 p.Value = g:Round(math.clamp(s, h.Min, h.Max), h.Rounding)
                 local t = (p.Value - h.Min) / (h.Max - h.Min)
-                k.Position = UDim2.new(t, 0, 0.5, 0)
-                m.Size = UDim2.fromScale(t, 1)
-                n.Text = tostring(p.Value)
+                fill.Size = UDim2.fromScale(t, 1)
+                thumb.Position = UDim2.new(t, 0, 0.5, 0)
+                valLabel.Text = tostring(p.Value)
                 g:SafeCallback(h.Callback, p.Value)
                 g:SafeCallback(h.Changed, p.Value)
             end
@@ -4619,40 +4619,18 @@ local aa = {
 
             local _uis = game:GetService('UserInputService')
 
-            -- Pill track (same dims as before, shifted left 8px)
-            local k = ai('UIStroke', {
-                Transparency = 0.5,
-                ThemeTag = { Color = 'ToggleSlider' },
-            })
-            local l = ai('Frame', {
-                Size = UDim2.fromOffset(36, 18),
-                AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, -18, 0.5, 0),  -- shifted left 8px vs original -10
-                Parent = i.Frame,
-                BackgroundTransparency = 1,
-                ThemeTag = { BackgroundColor3 = 'Accent' },
-            }, {
-                ai('UICorner', { CornerRadius = UDim.new(0, 35) }),
-                k,
-            })
-
-            -- Slider-style pill thumb (26x17, UICorner r=8, gradient highlight, UIStroke)
+            -- Same pill thumb as slider (26x14, white, gradient highlight)
             local thumbScale = ai('UIScale', { Scale = 1 })
             local j = ai('Frame', {
-                Size = UDim2.fromOffset(14, 14),
+                Size = UDim2.fromOffset(26, 14),
                 AnchorPoint = Vector2.new(0, 0.5),
                 Position = UDim2.new(0, 2, 0.5, 0),
                 BackgroundColor3 = Color3.new(1, 1, 1),
-                BackgroundTransparency = 0,
                 ZIndex = 2,
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(0, 7) }),
                 thumbScale,
-                ai('UIStroke', {
-                    Thickness = 1,
-                    Transparency = 0.5,
-                    ThemeTag = { Color = 'ToggleSlider' },
-                }),
+                ai('UIStroke', { Thickness = 1, Transparency = 0.55, ThemeTag = { Color = 'ToggleSlider' } }),
                 ai('Frame', {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
@@ -4674,11 +4652,26 @@ local aa = {
                     }),
                 }),
             })
-            j.Parent = l
+            local k = ai('UIStroke', {
+                Transparency = 0.5,
+                ThemeTag = { Color = 'ToggleSlider' },
+            })
+            -- Pill track (shifted left 8px from original)
+            local l = ai('Frame', {
+                Size = UDim2.fromOffset(46, 18),
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, -18, 0.5, 0),
+                Parent = i.Frame,
+                BackgroundTransparency = 1,
+                ThemeTag = { BackgroundColor3 = 'Accent' },
+            }, {
+                ai('UICorner', { CornerRadius = UDim.new(0, 35) }),
+                k,
+                j,
+            })
 
-            local ON_X  = 19
+            local ON_X  = 18
             local OFF_X = 2
-
             local _dragging = false
             local _startX, _thumbX0 = nil, nil
             local _moved = false
@@ -4688,7 +4681,6 @@ local aa = {
                 h.Changed = n
                 n(h.Value)
             end
-
             function h.SetValue(m, n, _skipCb)
                 n = not not n
                 h.Value = n
@@ -4704,7 +4696,6 @@ local aa = {
                     g:SafeCallback(h.Changed, h.Value)
                 end
             end
-
             function h.Destroy(m)
                 i:Destroy()
                 if e ~= nil then g.Options[e] = nil end
@@ -4713,47 +4704,39 @@ local aa = {
             ah.AddSignal(i.Frame.InputBegan, function(inp)
                 if inp.UserInputType ~= Enum.UserInputType.MouseButton1
                 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
-
                 _dragging = true
                 _moved    = false
                 _startX   = inp.Position.X
                 _thumbX0  = j.Position.X.Offset
-
-                af:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.3 }):Play()
-                af:Create(j, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
-
+                af:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.25 }):Play()
+                af:Create(j, TweenInfo.new(0.15), { BackgroundTransparency = 0.6 }):Play()
                 if _dc then _dc:Disconnect() end
                 if _ec then _ec:Disconnect() end
-
                 _dc = _uis.InputChanged:Connect(function(mv)
                     if not _dragging then return end
                     if mv.UserInputType ~= Enum.UserInputType.MouseMovement
                     and mv.UserInputType ~= Enum.UserInputType.Touch then return end
                     local dx = mv.Position.X - _startX
                     if math.abs(dx) > 4 then _moved = true end
-                    local nx = math.max(OFF_X, math.min(_thumbX0 + dx, ON_X))
-                    j.Position = UDim2.new(0, nx, 0.5, 0)
-                    l.BackgroundTransparency = 1 - ((nx - OFF_X) / (ON_X - OFF_X))
+                    j.Position = UDim2.new(0, math.clamp(_thumbX0 + dx, OFF_X, ON_X), 0.5, 0)
+                    l.BackgroundTransparency = 1 - ((j.Position.X.Offset - OFF_X) / (ON_X - OFF_X))
                 end)
-
                 _ec = _uis.InputEnded:Connect(function(up)
                     if up.UserInputType ~= Enum.UserInputType.MouseButton1
                     and up.UserInputType ~= Enum.UserInputType.Touch then return end
                     _dragging = false
-                    af:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-                    af:Create(j, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
+                    af:Create(thumbScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
+                    af:Create(j, TweenInfo.new(0.15), { BackgroundTransparency = 0 }):Play()
                     if _dc then _dc:Disconnect(); _dc = nil end
                     if _ec then _ec:Disconnect(); _ec = nil end
                     if not _moved then
                         h:SetValue(not h.Value)
                     else
-                        local mid = j.Position.X.Offset + 7
-                        h:SetValue(mid > 18)
+                        h:SetValue(j.Position.X.Offset + 13 > 10)
                     end
                     _moved = false
                 end)
             end)
-
             h:SetValue(h.Value)
             if e ~= nil then g.Options[e] = h end
 
