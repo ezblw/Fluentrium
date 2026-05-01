@@ -1790,18 +1790,28 @@ local aa = {
 
             if p then
                 local r, s, t = h.Themes, j.SpringMotor(j.GetThemeProperty'ElementTransparency', q.Frame, 'BackgroundTransparency', false, true)
+                local _elTs = game:GetService('TweenService')
+                local _elScale = Instance.new('UIScale')
+                _elScale.Scale = 1
+                _elScale.Parent = q.Frame
 
                 j.AddSignal(q.Frame.MouseEnter, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
+                    _elTs:Create(_elScale, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
+                    _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.25 }):Play()
                 end)
                 j.AddSignal(q.Frame.MouseLeave, function()
                     t(j.GetThemeProperty'ElementTransparency')
+                    _elTs:Create(_elScale, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+                    _elTs:Create(q.Border, TweenInfo.new(0.22), { Transparency = 0.5 }):Play()
                 end)
                 j.AddSignal(q.Frame.MouseButton1Down, function()
                     t(j.GetThemeProperty'ElementTransparency' + j.GetThemeProperty'HoverChange')
+                    _elTs:Create(_elScale, TweenInfo.new(0.1, Enum.EasingStyle.Quint), { Scale = 0.985 }):Play()
                 end)
                 j.AddSignal(q.Frame.MouseButton1Up, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
+                    _elTs:Create(_elScale, TweenInfo.new(0.35, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
                 end)
             end
 
@@ -2218,7 +2228,10 @@ local aa = {
                 x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
             end)
 
-            x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, 'BackgroundTransparency')
+            local _tabTs = game:GetService('TweenService')
+            local _tabScale = Instance.new('UIScale')
+            _tabScale.Scale = 1
+            _tabScale.Parent = x.Frame
 
             j.AddSignal(x.Frame.MouseEnter, function()
                 x.SetTransparency(x.Selected and 0.85 or 0.89)
@@ -2228,9 +2241,11 @@ local aa = {
             end)
             j.AddSignal(x.Frame.MouseButton1Down, function()
                 x.SetTransparency(0.92)
+                _tabTs:Create(_tabScale, TweenInfo.new(0.1, Enum.EasingStyle.Quint), { Scale = 0.93 }):Play()
             end)
             j.AddSignal(x.Frame.MouseButton1Up, function()
                 x.SetTransparency(x.Selected and 0.85 or 0.89)
+                _tabTs:Create(_tabScale, TweenInfo.new(0.35, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
             end)
             j.AddSignal(x.Frame.MouseButton1Click, function()
                 o:SelectTab(w)
@@ -2532,29 +2547,92 @@ local aa = {
                     },
                 }),
             })
-            o.CloseButton = q(i.Close, UDim2.new(1, -4, 0, 4), o.Frame, function()
-                p.Window:Dialog{
-                    Title = 'Close',
-                    Content = 'Are you sure you want to unload the interface?',
-                    Buttons = {
-                        {
-                            Title = 'Yes',
-                            Callback = function()
-                                p:Destroy()
-                            end,
+            -- macOS-style window control circles
+            local _ts2 = game:GetService('TweenService')
+            local _btnSize = 14
+
+            local function _makeCircleBtn(color, hoverChar, xPos, parent, cb)
+                local btn = l('TextButton', {
+                    Size = UDim2.fromOffset(_btnSize, _btnSize),
+                    Position = xPos,
+                    AnchorPoint = Vector2.new(0, 0.5),
+                    BackgroundColor3 = color,
+                    Text = '',
+                    ZIndex = 3,
+                    Parent = parent,
+                }, {
+                    l('UICorner', { CornerRadius = UDim.new(1, 0) }),
+                    l('UIStroke', {
+                        Thickness = 1,
+                        Transparency = 0.6,
+                        Color = Color3.new(0, 0, 0),
+                    }),
+                })
+                local icon = l('TextLabel', {
+                    Size = UDim2.fromScale(1, 1),
+                    BackgroundTransparency = 1,
+                    Text = hoverChar,
+                    TextColor3 = Color3.fromRGB(0, 0, 0),
+                    TextTransparency = 1,
+                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
+                    TextSize = 9,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    TextYAlignment = Enum.TextYAlignment.Center,
+                    ZIndex = 4,
+                    Parent = btn,
+                })
+                m(btn.MouseEnter, function()
+                    _ts2:Create(icon, TweenInfo.new(0.12), { TextTransparency = 0.2 }):Play()
+                    _ts2:Create(btn, TweenInfo.new(0.12), { BackgroundColor3 = color:lerp(Color3.new(1,1,1), 0.2) }):Play()
+                end)
+                m(btn.MouseLeave, function()
+                    _ts2:Create(icon, TweenInfo.new(0.15), { TextTransparency = 1 }):Play()
+                    _ts2:Create(btn, TweenInfo.new(0.15), { BackgroundColor3 = color }):Play()
+                end)
+                m(btn.MouseButton1Down, function()
+                    _ts2:Create(btn, TweenInfo.new(0.08), { BackgroundColor3 = color:lerp(Color3.new(0,0,0), 0.15) }):Play()
+                end)
+                m(btn.MouseButton1Up, function()
+                    _ts2:Create(btn, TweenInfo.new(0.1), { BackgroundColor3 = color }):Play()
+                end)
+                m(btn.MouseButton1Click, cb)
+                return { Frame = btn }
+            end
+
+            o.CloseButton = _makeCircleBtn(
+                Color3.fromRGB(255, 95, 87),
+                '✕',
+                UDim2.fromOffset(16, 21),
+                o.Frame,
+                function()
+                    p.Window:Dialog{
+                        Title = 'Close',
+                        Content = 'Are you sure you want to unload the interface?',
+                        Buttons = {
+                            { Title = 'Yes', Callback = function() p:Destroy() end },
+                            { Title = 'No' },
                         },
-                        {
-                            Title = 'No',
-                        },
-                    },
-                }
-            end)
-            o.MaxButton = q(i.Max, UDim2.new(1, -40, 0, 4), o.Frame, function()
-                n.Window.Maximize(not n.Window.Maximized)
-            end)
-            o.MinButton = q(i.Min, UDim2.new(1, -80, 0, 4), o.Frame, function()
-                p.Window:Minimize()
-            end)
+                    }
+                end
+            )
+            o.MinButton = _makeCircleBtn(
+                Color3.fromRGB(255, 189, 46),
+                '−',
+                UDim2.fromOffset(36, 21),
+                o.Frame,
+                function()
+                    p.Window:Minimize()
+                end
+            )
+            o.MaxButton = _makeCircleBtn(
+                Color3.fromRGB(39, 201, 63),
+                '+',
+                UDim2.fromOffset(56, 21),
+                o.Frame,
+                function()
+                    n.Window.Maximize(not n.Window.Maximized)
+                end
+            )
 
             return o
         end
@@ -2713,8 +2791,9 @@ local aa = {
                 },
             })
 
-            v.Root = s('Frame', {
+            v.Root = s('CanvasGroup', {
                 BackgroundTransparency = 1,
+                GroupTransparency = 1,
                 Size = v.Size,
                 Position = v.Position,
                 Parent = t.Parent,
@@ -2789,7 +2868,6 @@ local aa = {
 
             v.Maximize = function(M, N, O)
                 v.Maximized = M
-                v.TitleBar.MaxButton.Frame.Icon.Image = M and o.Restore or o.Max
 
                 if M then
                     K = v.Size.X.Offset
@@ -2886,6 +2964,17 @@ local aa = {
                 end
             end)
 
+            -- Window open animation: scale from 0.92 → 1 + fade in
+            local _winTs = game:GetService('TweenService')
+            local _winScale = Instance.new('UIScale')
+            _winScale.Scale = 0.92
+            _winScale.Parent = v.Root
+            v.Root.GroupTransparency = 1
+            task.defer(function()
+                _winTs:Create(_winScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+                _winTs:Create(v.Root, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
+            end)
+
             function v.Minimize(M)
 
                 if v._customMinimize then
@@ -2893,7 +2982,19 @@ local aa = {
                     return
                 end
                 v.Minimized = not v.Minimized
-                v.Root.Visible = not v.Minimized
+
+                if v.Minimized then
+                    -- Shrink + fade out
+                    _winTs:Create(_winScale, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Scale = 0.92 }):Play()
+                    local _ft = _winTs:Create(v.Root, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { GroupTransparency = 1 })
+                    _ft.Completed:Connect(function() v.Root.Visible = false end)
+                    _ft:Play()
+                else
+                    -- Reveal + scale back up
+                    v.Root.Visible = true
+                    _winTs:Create(_winScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+                    _winTs:Create(v.Root, TweenInfo.new(0.28, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
+                end
 
                 if not C then
                     C = true
@@ -4488,7 +4589,7 @@ local aa = {
 
             local fill = ai('Frame', {
                 Size = UDim2.new(0, 0, 1, 0),
-                ThemeTag = { BackgroundColor3 = 'Accent' },
+                BackgroundColor3 = Color3.fromRGB(52, 199, 89),
             }, { ai('UICorner', { CornerRadius = UDim.new(0, 12) }) })
 
             local rail = ai('Frame', {
@@ -4533,7 +4634,7 @@ local aa = {
                 _drag = false
                 if _conn then _conn:Disconnect(); _conn = nil end
                 _ts:Create(tScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
-                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0 }):Play()
+                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0, BackgroundColor3 = Color3.new(1, 1, 1) }):Play()
             end
 
             local function _apply(screenX)
@@ -4548,7 +4649,7 @@ local aa = {
             local function _begin(inp)
                 _drag = true
                 _ts:Create(tScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.35 }):Play()
-                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0.55 }):Play()
+                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0.55, BackgroundColor3 = Color3.fromRGB(52, 199, 89) }):Play()
                 local isTouch = inp.UserInputType == Enum.UserInputType.Touch
                 if _conn then _conn:Disconnect() end
                 _conn = _rs.RenderStepped:Connect(function()
@@ -4648,7 +4749,7 @@ local aa = {
                 Position = UDim2.new(1, -18, 0.5, 0),
                 Parent = i.Frame,
                 BackgroundTransparency = 1,
-                ThemeTag = { BackgroundColor3 = 'Accent' },
+                BackgroundColor3 = Color3.fromRGB(52, 199, 89),
             }, {
                 ai('UICorner', { CornerRadius = UDim.new(0, 12) }),
                 k, j,
@@ -4666,11 +4767,15 @@ local aa = {
                 n = not not n
                 h.Value = n
                 ah.OverrideTag(k, { Color = h.Value and 'Accent' or 'ToggleSlider' })
+                local _greenOn = Color3.fromRGB(52, 199, 89)
+                local _greyOff = Color3.fromRGB(80, 80, 100)
                 af:Create(j, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                     Position = UDim2.new(0, h.Value and ON_X or OFF_X, 0.5, 0),
+                    BackgroundColor3 = h.Value and _greenOn or Color3.new(1, 1, 1),
                 }):Play()
-                af:Create(l, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                af:Create(l, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                     BackgroundTransparency = h.Value and 0 or 1,
+                    BackgroundColor3 = h.Value and _greenOn or _greyOff,
                 }):Play()
                 if not _skip then
                     g:SafeCallback(h.Callback, h.Value)
