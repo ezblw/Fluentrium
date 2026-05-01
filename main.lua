@@ -735,7 +735,7 @@ local aa = {
                                     _gradConn:Disconnect()
                                     return
                                 end
-                                _gradT = _gradT + dt * 22 -- degrees per second
+                                _gradT = _gradT + dt * 65 -- degrees per second
                                 local rot = (_gradT % 360)
                                 pcall(function() outerGrad.Rotation = rot end)
                                 -- also animate the window border stroke color
@@ -2232,6 +2232,13 @@ local aa = {
                 k('UICorner', {
                     CornerRadius = UDim.new(0, 12),
                 }),
+                -- gradient outline for selected state (hidden by default)
+                k('UIStroke', {
+                    Name = 'SelectionStroke',
+                    Thickness = 1.2,
+                    Transparency = 1,
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                }),
                 k('TextLabel', {
                     AnchorPoint = Vector2.new(0, 0.5),
                     Position = r and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
@@ -2297,16 +2304,16 @@ local aa = {
             x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, 'BackgroundTransparency')
 
             j.AddSignal(x.Frame.MouseEnter, function()
-                x.SetTransparency(x.Selected and 0.85 or 0.89)
+                x.SetTransparency(x.Selected and 0.97 or 0.95)
             end)
             j.AddSignal(x.Frame.MouseLeave, function()
-                x.SetTransparency(x.Selected and 0.89 or 1)
+                x.SetTransparency(x.Selected and 0.96 or 1)
             end)
             j.AddSignal(x.Frame.MouseButton1Down, function()
-                x.SetTransparency(0.92)
+                x.SetTransparency(0.93)
             end)
             j.AddSignal(x.Frame.MouseButton1Up, function()
-                x.SetTransparency(x.Selected and 0.85 or 0.89)
+                x.SetTransparency(x.Selected and 0.96 or 0.95)
             end)
             j.AddSignal(x.Frame.MouseButton1Click, function()
                 o:SelectTab(w)
@@ -2336,19 +2343,60 @@ local aa = {
         end
         function o.SelectTab(p, q)
             local r = o.Window
+            local _ts = game:GetService('TweenService')
+            local _rs = game:GetService('RunService')
+
+            -- get gradient colors if available
+            local _gc = rawget(getfenv and getfenv(0) or {}, '__gradColors')
+            local _c1 = (_gc and _gc.primary) or Color3.fromRGB(200, 200, 220)
+            local _c2 = (_gc and _gc.secondary) or Color3.fromRGB(160, 160, 200)
+            -- lighten both colors heavily for a subtle outline
+            local function _lighten(c, f)
+                return Color3.fromRGB(
+                    math.clamp(c.R * 255 + (255 - c.R * 255) * f, 0, 255) / 255,
+                    math.clamp(c.G * 255 + (255 - c.G * 255) * f, 0, 255) / 255,
+                    math.clamp(c.B * 255 + (255 - c.B * 255) * f, 0, 255) / 255
+                )
+            end
+            _c1 = _lighten(_c1, 0.72)
+            _c2 = _lighten(_c2, 0.72)
 
             o.SelectedTab = q
 
+            -- cancel any previous stroke animation
+            if o._strokeConn then o._strokeConn:Disconnect(); o._strokeConn = nil end
+
             for s, t in next, o.Tabs do
                 t.SetTransparency(1)
-
                 t.Selected = false
+                -- hide outline on all tabs
+                local _st = t.Frame:FindFirstChild('SelectionStroke')
+                if _st then
+                    _ts:Create(_st, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Transparency = 1 }):Play()
+                end
             end
 
-            o.Tabs[q].SetTransparency(0.89)
-
+            o.Tabs[q].SetTransparency(0.96) -- nearly invisible background, just a ghost
             o.Tabs[q].Selected = true
             r.TabDisplay.Text = o.Tabs[q].Name
+
+            -- animate gradient outline on selected tab
+            local _selStroke = o.Tabs[q].Frame:FindFirstChild('SelectionStroke')
+            if _selStroke then
+                _selStroke.Color = _c1
+                _ts:Create(_selStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { Transparency = 0.0 }):Play()
+                -- cycle gradient colors on the outline
+                local _t = 0
+                o._strokeConn = _rs.Heartbeat:Connect(function(dt)
+                    if not _selStroke or not _selStroke.Parent then
+                        o._strokeConn:Disconnect(); o._strokeConn = nil
+                        return
+                    end
+                    _t = _t + dt * 1.5
+                    local alpha = (math.sin(_t) + 1) / 2
+                    pcall(function() _selStroke.Color = _c1:lerp(_c2, alpha) end)
+                end)
+            end
 
             r.SelectorPosMotor:setGoal(l(o:GetCurrentTabPos(), {frequency = 6}))
             task.spawn(function()
