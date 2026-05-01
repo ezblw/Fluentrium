@@ -1798,12 +1798,12 @@ local aa = {
                 j.AddSignal(q.Frame.MouseEnter, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
-                    _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.25 }):Play()
+                    pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.25 }):Play() end)
                 end)
                 j.AddSignal(q.Frame.MouseLeave, function()
                     t(j.GetThemeProperty'ElementTransparency')
                     _elTs:Create(_elScale, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-                    _elTs:Create(q.Border, TweenInfo.new(0.22), { Transparency = 0.5 }):Play()
+                    pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.22), { Transparency = 0.5 }):Play() end)
                 end)
                 j.AddSignal(q.Frame.MouseButton1Down, function()
                     t(j.GetThemeProperty'ElementTransparency' + j.GetThemeProperty'HoverChange')
@@ -2233,6 +2233,8 @@ local aa = {
             _tabScale.Scale = 1
             _tabScale.Parent = x.Frame
 
+            x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, 'BackgroundTransparency')
+
             j.AddSignal(x.Frame.MouseEnter, function()
                 x.SetTransparency(x.Selected and 0.85 or 0.89)
             end)
@@ -2555,7 +2557,7 @@ local aa = {
                 local btn = l('TextButton', {
                     Size = UDim2.fromOffset(_btnSize, _btnSize),
                     Position = xPos,
-                    AnchorPoint = Vector2.new(0, 0.5),
+                    AnchorPoint = Vector2.new(1, 0.5),
                     BackgroundColor3 = color,
                     Text = '',
                     ZIndex = 3,
@@ -2602,7 +2604,7 @@ local aa = {
             o.CloseButton = _makeCircleBtn(
                 Color3.fromRGB(255, 95, 87),
                 '✕',
-                UDim2.fromOffset(16, 21),
+                UDim2.new(1, -16, 0.5, 0),
                 o.Frame,
                 function()
                     p.Window:Dialog{
@@ -2618,7 +2620,7 @@ local aa = {
             o.MinButton = _makeCircleBtn(
                 Color3.fromRGB(255, 189, 46),
                 '−',
-                UDim2.fromOffset(36, 21),
+                UDim2.new(1, -36, 0.5, 0),
                 o.Frame,
                 function()
                     p.Window:Minimize()
@@ -2627,7 +2629,7 @@ local aa = {
             o.MaxButton = _makeCircleBtn(
                 Color3.fromRGB(39, 201, 63),
                 '+',
-                UDim2.fromOffset(56, 21),
+                UDim2.new(1, -56, 0.5, 0),
                 o.Frame,
                 function()
                     n.Window.Maximize(not n.Window.Maximized)
@@ -2969,10 +2971,12 @@ local aa = {
             local _winScale = Instance.new('UIScale')
             _winScale.Scale = 0.92
             _winScale.Parent = v.Root
-            v.Root.GroupTransparency = 1
-            task.defer(function()
-                _winTs:Create(_winScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-                _winTs:Create(v.Root, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
+            pcall(function() v.Root.GroupTransparency = 1 end)
+            task.delay(0.05, function()
+                pcall(function()
+                    _winTs:Create(_winScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+                    _winTs:Create(v.Root, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
+                end)
             end)
 
             function v.Minimize(M)
@@ -2985,15 +2989,22 @@ local aa = {
 
                 if v.Minimized then
                     -- Shrink + fade out
-                    _winTs:Create(_winScale, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Scale = 0.92 }):Play()
-                    local _ft = _winTs:Create(v.Root, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { GroupTransparency = 1 })
-                    _ft.Completed:Connect(function() v.Root.Visible = false end)
-                    _ft:Play()
+                    pcall(function()
+                        _winTs:Create(_winScale, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Scale = 0.92 }):Play()
+                        local _ft = _winTs:Create(v.Root, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { GroupTransparency = 1 })
+                        _ft.Completed:Connect(function() v.Root.Visible = false end)
+                        _ft:Play()
+                    end)
+                    if not pcall(function() return v.Root.GroupTransparency end) then
+                        v.Root.Visible = false
+                    end
                 else
                     -- Reveal + scale back up
                     v.Root.Visible = true
-                    _winTs:Create(_winScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-                    _winTs:Create(v.Root, TweenInfo.new(0.28, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
+                    pcall(function()
+                        _winTs:Create(_winScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+                        _winTs:Create(v.Root, TweenInfo.new(0.28, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
+                    end)
                 end
 
                 if not C then
