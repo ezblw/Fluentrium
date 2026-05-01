@@ -1306,16 +1306,18 @@ local aa = {
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                 BorderSizePixel = 0,
             }, {
+                -- Drop shadow
                 j('ImageLabel', {
                     Image = 'rbxassetid://8992230677',
-                    ScaleType = 'Slice',
+                    ScaleType = Enum.ScaleType.Slice,
                     SliceCenter = Rect.new(Vector2.new(99, 99), Vector2.new(99, 99)),
                     AnchorPoint = Vector2.new(0.5, 0.5),
-                    Size = UDim2.new(1, 120, 1, 116),
-                    Position = UDim2.new(0.5, 0, 0.5, 0),
+                    Size = UDim2.new(1, 80, 1, 80),
+                    Position = UDim2.new(0.5, 0, 0.5, 10),
                     BackgroundTransparency = 1,
                     ImageColor3 = Color3.fromRGB(0, 0, 0),
-                    ImageTransparency = 0.7,
+                    ImageTransparency = 0.55,
+                    ZIndex = -1,
                 }),
                 j('UICorner', {
                     CornerRadius = UDim.new(0, 43),
@@ -1746,6 +1748,13 @@ local aa = {
                     Color = 'ElementBorder',
                 },
             })
+            -- Animated accent outline (second stroke, invisible by default)
+            q.AccentBorder = k('UIStroke', {
+                Transparency = 1,
+                Thickness = 1.5,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                ThemeTag = { Color = 'Accent' },
+            })
             q.Frame = k('TextButton', {
                 Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 0.89,
@@ -1763,6 +1772,7 @@ local aa = {
                     CornerRadius = UDim.new(0, 12),
                 }),
                 q.Border,
+                q.AccentBorder,
                 q.LabelHolder,
             })
 
@@ -1791,23 +1801,39 @@ local aa = {
             if p then
                 local r, s, t = h.Themes, j.SpringMotor(j.GetThemeProperty'ElementTransparency', q.Frame, 'BackgroundTransparency', false, true)
                 local _elTs = game:GetService('TweenService')
+                local _elRs = game:GetService('RunService')
                 local _elScale = Instance.new('UIScale')
                 _elScale.Scale = 1
                 _elScale.Parent = q.Frame
+                local _accentConn = nil
+                local _accentT = 0
 
                 j.AddSignal(q.Frame.MouseEnter, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
-                    pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.25 }):Play() end)
+                    pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.3 }):Play() end)
+                    -- start accent outline pulse
+                    if _accentConn then _accentConn:Disconnect() end
+                    _accentT = 0
+                    pcall(function() q.AccentBorder.Transparency = 0.35 end)
+                    _accentConn = _elRs.Heartbeat:Connect(function(dt)
+                        _accentT = _accentT + dt * 2.2
+                        local pulse = 0.35 + math.sin(_accentT) * 0.2
+                        pcall(function() q.AccentBorder.Transparency = pulse end)
+                    end)
                 end)
                 j.AddSignal(q.Frame.MouseLeave, function()
                     t(j.GetThemeProperty'ElementTransparency')
                     _elTs:Create(_elScale, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
                     pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.22), { Transparency = 0.5 }):Play() end)
+                    -- stop pulse and fade out accent border
+                    if _accentConn then _accentConn:Disconnect(); _accentConn = nil end
+                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.25), { Transparency = 1 }):Play() end)
                 end)
                 j.AddSignal(q.Frame.MouseButton1Down, function()
                     t(j.GetThemeProperty'ElementTransparency' + j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.1, Enum.EasingStyle.Quint), { Scale = 0.985 }):Play()
+                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.08), { Transparency = 0.1 }):Play() end)
                 end)
                 j.AddSignal(q.Frame.MouseButton1Up, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
@@ -2534,7 +2560,7 @@ local aa = {
                     }),
                 }),
                 l('Frame', {
-                    BackgroundTransparency = 0.5,
+                    BackgroundTransparency = 0.25,
                     Size = UDim2.new(1, 0, 0, 1),
                     Position = UDim2.new(0, 0, 1, 0),
                     ThemeTag = {
@@ -2708,7 +2734,7 @@ local aa = {
             local _profileDivider = s('Frame', {
                 Size = UDim2.new(0, t.TabWidth, 0, 1),
                 Position = UDim2.new(0, 12, 1, -58),
-                BackgroundTransparency = 0.6,
+                BackgroundTransparency = 0.3,
                 ThemeTag = {
                     BackgroundColor3 = 'TitleBarLine',
                 },
@@ -2791,10 +2817,23 @@ local aa = {
             local _sidebarDivider = s('Frame', {
                 Size = UDim2.new(0, 1, 1, -32),
                 Position = UDim2.new(0, t.TabWidth + 20, 0, 16),
-                BackgroundTransparency = 0.6,
+                BackgroundTransparency = 0.3,
                 ThemeTag = {
                     BackgroundColor3 = 'TitleBarLine',
                 },
+            })
+
+            -- Bottom drag handle (move UI)
+            local _dragHandle = s('TextButton', {
+                Size = UDim2.new(0, 60, 0, 8),
+                AnchorPoint = Vector2.new(0.5, 1),
+                Position = UDim2.new(0.5, 0, 1, -8),
+                BackgroundTransparency = 0.5,
+                Text = '',
+                ZIndex = 10,
+                ThemeTag = { BackgroundColor3 = 'TitleBarLine' },
+            }, {
+                s('UICorner', { CornerRadius = UDim.new(1, 0) }),
             })
 
             v.Root = s('Frame', {
@@ -2811,6 +2850,7 @@ local aa = {
                 _profileDivider,
                 _profileFrame,
                 _sidebarDivider,
+                _dragHandle,
             })
             v.TitleBar = e(d.Parent.TitleBar){
                 Title = t.Title,
@@ -2896,6 +2936,38 @@ local aa = {
                 end
             end
 
+            -- drag handle hover animations
+            local _dhTs = game:GetService('TweenService')
+            m.AddSignal(_dragHandle.MouseEnter, function()
+                _dhTs:Create(_dragHandle, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.2, Size = UDim2.new(0, 80, 0, 8) }):Play()
+            end)
+            m.AddSignal(_dragHandle.MouseLeave, function()
+                _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.5, Size = UDim2.new(0, 60, 0, 8) }):Play()
+            end)
+
+            local _dhDragging = false
+            local _dhStartPos, _dhStartRoot
+
+            m.AddSignal(_dragHandle.InputBegan, function(M)
+                if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
+                    _dhDragging = true
+                    _dhStartPos = M.Position
+                    _dhStartRoot = v.Root.Position
+                    _dhTs:Create(_dragHandle, TweenInfo.new(0.15, Enum.EasingStyle.Quint), { BackgroundTransparency = 0, Size = UDim2.new(0, 90, 0, 10) }):Play()
+                    M.Changed:Connect(function()
+                        if M.UserInputState == Enum.UserInputState.End then
+                            _dhDragging = false
+                            _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.5, Size = UDim2.new(0, 60, 0, 8) }):Play()
+                        end
+                    end)
+                end
+            end)
+            m.AddSignal(_dragHandle.InputChanged, function(M)
+                if M.UserInputType == Enum.UserInputType.MouseMovement or M.UserInputType == Enum.UserInputType.Touch then
+                    x = M
+                end
+            end)
+
             m.AddSignal(v.TitleBar.Frame.InputBegan, function(M)
                 if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
                     w = true
@@ -2925,16 +2997,23 @@ local aa = {
                 end
             end)
             m.AddSignal(h.InputChanged, function(M)
+                -- drag handle move
+                if _dhDragging and (M.UserInputType == Enum.UserInputType.MouseMovement or M.UserInputType == Enum.UserInputType.Touch) then
+                    local N = M.Position - _dhStartPos
+                    v.Position = UDim2.fromOffset(_dhStartRoot.X.Offset + N.X, _dhStartRoot.Y.Offset + N.Y)
+                    H:setGoal{
+                        X = q(v.Position.X.Offset, {frequency = 18, dampingRatio = 0.85}),
+                        Y = q(v.Position.Y.Offset, {frequency = 18, dampingRatio = 0.85}),
+                    }
+                    if v.Maximized then v.Maximize(false, true, true) end
+                end
                 if M == x and w then
                     local N = M.Position - y
-
                     v.Position = UDim2.fromOffset(z.X.Offset + N.X, z.Y.Offset + N.Y)
-
                     H:setGoal{
-                        X = r(v.Position.X.Offset),
-                        Y = r(v.Position.Y.Offset),
+                        X = q(v.Position.X.Offset, {frequency = 18, dampingRatio = 0.85}),
+                        Y = q(v.Position.Y.Offset, {frequency = 18, dampingRatio = 0.85}),
                     }
-
                     if v.Maximized then
                         v.Maximize(false, true, true)
                     end
