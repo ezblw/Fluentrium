@@ -2864,16 +2864,24 @@ local aa = {
             })
 
             -- Bottom drag handle (move UI) - sits BELOW the window frame
-            local _dragHandle = s('TextButton', {
-                Size = UDim2.new(0, 110, 0, 5),
+            local _dragHandle = s('Frame', {
+                Size = UDim2.new(0, 110, 0, 24),
                 AnchorPoint = Vector2.new(0.5, 0),
-                Position = UDim2.new(0.5, 0, 1, 10),
-                BackgroundTransparency = 0.4,
-                BackgroundColor3 = Color3.fromRGB(160, 160, 160),
-                Text = '',
+                Position = UDim2.new(0.5, 0, 1, 8),
+                BackgroundTransparency = 1,
                 ZIndex = 10,
+                Active = true,
             }, {
-                s('UICorner', { CornerRadius = UDim.new(1, 0) }),
+                s('ImageLabel', {
+                    Size = UDim2.fromOffset(96, 24),
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    Position = UDim2.fromScale(0.5, 0.5),
+                    BackgroundTransparency = 1,
+                    Image = 'rbxassetid://120997033468887',
+                    ImageTransparency = 0.45,
+                    Rotation = 90,
+                    ZIndex = 11,
+                }),
             })
 
             v.Root = s('Frame', {
@@ -2976,50 +2984,66 @@ local aa = {
                 end
             end
 
-            -- drag handle hover/drag animations
+            -- drag handle icon reference
+            local _dhIcon = _dragHandle:FindFirstChildOfClass('ImageLabel')
             local _dhTs = game:GetService('TweenService')
-            m.AddSignal(_dragHandle.MouseEnter, function()
-                if not _dhDragging then
-                    _dhTs:Create(_dragHandle, TweenInfo.new(0.18, Enum.EasingStyle.Quint), {
-                        BackgroundTransparency = 0.2,
-                        BackgroundColor3 = Color3.fromRGB(200, 200, 200),
-                        Size = UDim2.new(0, 130, 0, 5),
-                    }):Play()
-                end
+            local _dhRs = game:GetService('RunService')
+
+            local function _dhSetAlpha(a, dur)
+                _dhTs:Create(_dhIcon, TweenInfo.new(dur or 0.15, Enum.EasingStyle.Quint), { ImageTransparency = a }):Play()
+            end
+
+            _dragHandle.MouseEnter:Connect(function()
+                if not _dhDragging then _dhSetAlpha(0.2) end
             end)
-            m.AddSignal(_dragHandle.MouseLeave, function()
-                if not _dhDragging then
-                    _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
-                        BackgroundTransparency = 0.4,
-                        BackgroundColor3 = Color3.fromRGB(160, 160, 160),
-                        Size = UDim2.new(0, 110, 0, 5),
-                    }):Play()
-                end
+            _dragHandle.MouseLeave:Connect(function()
+                if not _dhDragging then _dhSetAlpha(0.45) end
             end)
 
             local _dhDragging = false
             local _dhStartPos, _dhStartRoot
+            -- smooth lerp state
+            local _dhTargetX, _dhTargetY = 0, 0
+            local _dhCurrentX, _dhCurrentY = 0, 0
+            local _dhLerpConn = nil
+
+            local function _dhStartLerp()
+                if _dhLerpConn then return end
+                _dhLerpConn = _dhRs.Heartbeat:Connect(function(dt)
+                    local alpha = 1 - (0.01 ^ dt)  -- frame-rate independent lerp factor ~60fps smooth
+                    _dhCurrentX = _dhCurrentX + (_dhTargetX - _dhCurrentX) * alpha
+                    _dhCurrentY = _dhCurrentY + (_dhTargetY - _dhCurrentY) * alpha
+                    pcall(function()
+                        v.Root.Position = UDim2.fromOffset(_dhCurrentX, _dhCurrentY)
+                    end)
+                end)
+            end
+
+            local function _dhStopLerp()
+                if _dhLerpConn then
+                    _dhLerpConn:Disconnect()
+                    _dhLerpConn = nil
+                end
+            end
 
             m.AddSignal(_dragHandle.InputBegan, function(M)
                 if M.UserInputType == Enum.UserInputType.MouseButton1 or M.UserInputType == Enum.UserInputType.Touch then
                     _dhDragging = true
                     _dhStartPos = M.Position
                     _dhStartRoot = v.Root.Position
-                    -- pure white when dragging
-                    _dhTs:Create(_dragHandle, TweenInfo.new(0.12, Enum.EasingStyle.Quint), {
-                        BackgroundTransparency = 0,
-                        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                        Size = UDim2.new(0, 130, 0, 5),
-                    }):Play()
+                    _dhCurrentX = _dhStartRoot.X.Offset
+                    _dhCurrentY = _dhStartRoot.Y.Offset
+                    _dhTargetX = _dhCurrentX
+                    _dhTargetY = _dhCurrentY
+                    _dhSetAlpha(0.0, 0.1)
+                    _dhStartLerp()
                     M.Changed:Connect(function()
                         if M.UserInputState == Enum.UserInputState.End then
                             _dhDragging = false
-                            -- back to gray on release
-                            _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
-                                BackgroundTransparency = 0.4,
-                                BackgroundColor3 = Color3.fromRGB(160, 160, 160),
-                                Size = UDim2.new(0, 110, 0, 5),
-                            }):Play()
+                            _dhStopLerp()
+                            -- snap final position
+                            pcall(function() v.Position = v.Root.Position end)
+                            _dhSetAlpha(0.45, 0.22)
                         end
                     end)
                 end
@@ -3059,22 +3083,20 @@ local aa = {
                 end
             end)
             m.AddSignal(h.InputChanged, function(M)
-                -- drag handle move
+                -- drag handle move - update lerp target
                 if _dhDragging and (M.UserInputType == Enum.UserInputType.MouseMovement or M.UserInputType == Enum.UserInputType.Touch) then
                     local N = M.Position - _dhStartPos
-                    v.Position = UDim2.fromOffset(_dhStartRoot.X.Offset + N.X, _dhStartRoot.Y.Offset + N.Y)
-                    H:setGoal{
-                        X = q(v.Position.X.Offset, {frequency = 18, dampingRatio = 0.85}),
-                        Y = q(v.Position.Y.Offset, {frequency = 18, dampingRatio = 0.85}),
-                    }
+                    _dhTargetX = _dhStartRoot.X.Offset + N.X
+                    _dhTargetY = _dhStartRoot.Y.Offset + N.Y
+                    v.Position = UDim2.fromOffset(_dhTargetX, _dhTargetY)
                     if v.Maximized then v.Maximize(false, true, true) end
                 end
                 if M == x and w then
                     local N = M.Position - y
                     v.Position = UDim2.fromOffset(z.X.Offset + N.X, z.Y.Offset + N.Y)
                     H:setGoal{
-                        X = q(v.Position.X.Offset, {frequency = 18, dampingRatio = 0.85}),
-                        Y = q(v.Position.Y.Offset, {frequency = 18, dampingRatio = 0.85}),
+                        X = q(v.Position.X.Offset, {frequency = 24, dampingRatio = 0.9}),
+                        Y = q(v.Position.Y.Offset, {frequency = 24, dampingRatio = 0.9}),
                     }
                     if v.Maximized then
                         v.Maximize(false, true, true)
