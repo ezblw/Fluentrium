@@ -725,6 +725,27 @@ local aa = {
                         })
                         outerGrad.Rotation = 135
 
+                        -- MoveGradient: continuously animate gradient rotation
+                        if D.MoveGradient then
+                            local _rs = game:GetService('RunService')
+                            local _gradT = 0
+                            local _gradConn
+                            _gradConn = _rs.Heartbeat:Connect(function(dt)
+                                if not E.Root or not E.Root.Parent then
+                                    _gradConn:Disconnect()
+                                    return
+                                end
+                                _gradT = _gradT + dt * 22 -- degrees per second
+                                local rot = (_gradT % 360)
+                                pcall(function() outerGrad.Rotation = rot end)
+                                -- also animate the window border stroke color
+                                pcall(function()
+                                    local alpha = (math.sin(math.rad(_gradT * 1.5)) + 1) / 2
+                                    stroke.Color = colors.primary:lerp(colors.secondary, alpha)
+                                end)
+                            end)
+                        end
+
                         for _, child in ipairs(paint:GetChildren()) do
                             if child:IsA('Frame') then
 
