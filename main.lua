@@ -1812,14 +1812,25 @@ local aa = {
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
                     pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.3 }):Play() end)
-                    -- start accent outline pulse
+                    -- start gradient-cycling accent outline pulse
                     if _accentConn then _accentConn:Disconnect() end
                     _accentT = 0
-                    pcall(function() q.AccentBorder.Transparency = 0.35 end)
+                    local _c1 = j.GetThemeProperty('Accent') or Color3.fromRGB(76,194,255)
+                    local _c2 = Color3.fromRGB(
+                        math.clamp(_c1.R * 255 * 0.6 + 60, 0, 255) / 255,
+                        math.clamp(_c1.G * 255 * 0.6 + 60, 0, 255) / 255,
+                        math.clamp(_c1.B * 255 * 1.4, 0, 255) / 255
+                    )
+                    pcall(function() q.AccentBorder.Transparency = 0.2 end)
                     _accentConn = _elRs.Heartbeat:Connect(function(dt)
-                        _accentT = _accentT + dt * 2.2
-                        local pulse = 0.35 + math.sin(_accentT) * 0.2
-                        pcall(function() q.AccentBorder.Transparency = pulse end)
+                        _accentT = _accentT + dt * 2.0
+                        local alpha = (math.sin(_accentT) + 1) / 2
+                        local col = _c1:lerp(_c2, alpha)
+                        local pulse = 0.15 + math.sin(_accentT * 1.5) * 0.12
+                        pcall(function()
+                            q.AccentBorder.Color = col
+                            q.AccentBorder.Transparency = pulse
+                        end)
                     end)
                 end)
                 j.AddSignal(q.Frame.MouseLeave, function()
@@ -2823,17 +2834,22 @@ local aa = {
                 },
             })
 
-            -- Bottom drag handle (move UI)
+            -- Bottom drag handle (move UI) - sits BELOW the window frame
             local _dragHandle = s('TextButton', {
-                Size = UDim2.new(0, 60, 0, 8),
-                AnchorPoint = Vector2.new(0.5, 1),
-                Position = UDim2.new(0.5, 0, 1, -8),
-                BackgroundTransparency = 0.5,
+                Size = UDim2.new(0, 120, 0, 10),
+                AnchorPoint = Vector2.new(0.5, 0),
+                Position = UDim2.new(0.5, 0, 1, 10),
+                BackgroundTransparency = 0.25,
                 Text = '',
                 ZIndex = 10,
-                ThemeTag = { BackgroundColor3 = 'TitleBarLine' },
+                ThemeTag = { BackgroundColor3 = 'Accent' },
             }, {
                 s('UICorner', { CornerRadius = UDim.new(1, 0) }),
+                s('UIStroke', {
+                    Thickness = 1,
+                    Transparency = 0.5,
+                    ThemeTag = { Color = 'Accent' },
+                }),
             })
 
             v.Root = s('Frame', {
@@ -2939,10 +2955,10 @@ local aa = {
             -- drag handle hover animations
             local _dhTs = game:GetService('TweenService')
             m.AddSignal(_dragHandle.MouseEnter, function()
-                _dhTs:Create(_dragHandle, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.2, Size = UDim2.new(0, 80, 0, 8) }):Play()
+                _dhTs:Create(_dragHandle, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.05, Size = UDim2.new(0, 150, 0, 10) }):Play()
             end)
             m.AddSignal(_dragHandle.MouseLeave, function()
-                _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.5, Size = UDim2.new(0, 60, 0, 8) }):Play()
+                _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.25, Size = UDim2.new(0, 120, 0, 10) }):Play()
             end)
 
             local _dhDragging = false
@@ -2953,11 +2969,11 @@ local aa = {
                     _dhDragging = true
                     _dhStartPos = M.Position
                     _dhStartRoot = v.Root.Position
-                    _dhTs:Create(_dragHandle, TweenInfo.new(0.15, Enum.EasingStyle.Quint), { BackgroundTransparency = 0, Size = UDim2.new(0, 90, 0, 10) }):Play()
+                    _dhTs:Create(_dragHandle, TweenInfo.new(0.15, Enum.EasingStyle.Quint), { BackgroundTransparency = 0, Size = UDim2.new(0, 160, 0, 12) }):Play()
                     M.Changed:Connect(function()
                         if M.UserInputState == Enum.UserInputState.End then
                             _dhDragging = false
-                            _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.5, Size = UDim2.new(0, 60, 0, 8) }):Play()
+                            _dhTs:Create(_dragHandle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.25, Size = UDim2.new(0, 120, 0, 10) }):Play()
                         end
                     end)
                 end
