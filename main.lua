@@ -743,7 +743,7 @@ local aa = {
                         overlay.BackgroundColor3 = Color3.new(0,0,0)
                         overlay.BackgroundTransparency = 0.55
                         overlay.BorderSizePixel = 0
-                        Instance.new('UICorner', overlay).CornerRadius = UDim.new(0, 12)
+                        Instance.new('UICorner', overlay).CornerRadius = UDim.new(0, 43)
 
                         local stroke = Instance.new('UIStroke', paint)
                         stroke.Thickness = 1.5
@@ -1318,7 +1318,7 @@ local aa = {
                     ImageTransparency = 0.7,
                 }),
                 j('UICorner', {
-                    CornerRadius = UDim.new(0, 12),
+                    CornerRadius = UDim.new(0, 43),
                 }),
                 j('Frame', {
                     BackgroundTransparency = 0.45,
@@ -1329,7 +1329,7 @@ local aa = {
                     },
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 12),
+                        CornerRadius = UDim.new(0, 43),
                     }),
                 }),
                 j('Frame', {
@@ -1338,7 +1338,7 @@ local aa = {
                     Size = UDim2.fromScale(1, 1),
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 12),
+                        CornerRadius = UDim.new(0, 43),
                     }),
                     j('UIGradient', {
                         Rotation = 90,
@@ -1356,7 +1356,7 @@ local aa = {
                     BackgroundTransparency = 1,
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 12),
+                        CornerRadius = UDim.new(0, 43),
                     }),
                 }),
                 j('ImageLabel', {
@@ -1371,7 +1371,7 @@ local aa = {
                     },
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 12),
+                        CornerRadius = UDim.new(0, 43),
                     }),
                 }),
                 j('Frame', {
@@ -1380,7 +1380,7 @@ local aa = {
                     ZIndex = 2,
                 }, {
                     j('UICorner', {
-                        CornerRadius = UDim.new(0, 12),
+                        CornerRadius = UDim.new(0, 43),
                     }),
                     j('UIStroke', {
                         Transparency = 0.5,
@@ -2703,6 +2703,16 @@ local aa = {
                 Position = UDim2.fromOffset(t.TabWidth + 26, 90),
                 BackgroundTransparency = 1,
             })
+            -- Vertical divider between tab sidebar and content area
+            local _sidebarDivider = s('Frame', {
+                Size = UDim2.new(0, 1, 1, -32),
+                Position = UDim2.new(0, t.TabWidth + 20, 0, 16),
+                BackgroundTransparency = 0.6,
+                ThemeTag = {
+                    BackgroundColor3 = 'TitleBarLine',
+                },
+            })
+
             v.Root = s('Frame', {
                 BackgroundTransparency = 1,
                 Size = v.Size,
@@ -2716,6 +2726,7 @@ local aa = {
                 E,
                 _profileDivider,
                 _profileFrame,
+                _sidebarDivider,
             })
             v.TitleBar = e(d.Parent.TitleBar){
                 Title = t.Title,
