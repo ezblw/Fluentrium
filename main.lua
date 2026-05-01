@@ -2228,11 +2228,6 @@ local aa = {
                 x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
             end)
 
-            local _tabTs = game:GetService('TweenService')
-            local _tabScale = Instance.new('UIScale')
-            _tabScale.Scale = 1
-            _tabScale.Parent = x.Frame
-
             x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, 'BackgroundTransparency')
 
             j.AddSignal(x.Frame.MouseEnter, function()
@@ -2243,11 +2238,9 @@ local aa = {
             end)
             j.AddSignal(x.Frame.MouseButton1Down, function()
                 x.SetTransparency(0.92)
-                _tabTs:Create(_tabScale, TweenInfo.new(0.1, Enum.EasingStyle.Quint), { Scale = 0.93 }):Play()
             end)
             j.AddSignal(x.Frame.MouseButton1Up, function()
                 x.SetTransparency(x.Selected and 0.85 or 0.89)
-                _tabTs:Create(_tabScale, TweenInfo.new(0.35, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
             end)
             j.AddSignal(x.Frame.MouseButton1Click, function()
                 o:SelectTab(w)
@@ -2674,6 +2667,17 @@ local aa = {
                 Size = UDim2.fromOffset(20, 20),
                 BackgroundTransparency = 1,
                 Position = UDim2.new(1, -20, 1, -20),
+            }, {
+                s('ImageLabel', {
+                    Size = UDim2.fromOffset(14, 14),
+                    Position = UDim2.new(1, -2, 1, -2),
+                    AnchorPoint = Vector2.new(1, 1),
+                    BackgroundTransparency = 1,
+                    Image = 'rbxassetid://9886659001',
+                    ImageTransparency = 0.6,
+                    Rotation = 90,
+                    ThemeTag = { ImageColor3 = 'SubText' },
+                }),
             })
 
             v.TabHolder = s('ScrollingFrame', {
@@ -2793,9 +2797,8 @@ local aa = {
                 },
             })
 
-            v.Root = s('CanvasGroup', {
+            v.Root = s('Frame', {
                 BackgroundTransparency = 1,
-                GroupTransparency = 1,
                 Size = v.Size,
                 Position = v.Position,
                 Parent = t.Parent,
@@ -2966,21 +2969,18 @@ local aa = {
                 end
             end)
 
-            -- Window open animation: scale from 0.92 → 1 + fade in
+            -- Window open animation: scale from 0.88 → 1 with Back easing
             local _winTs = game:GetService('TweenService')
             local _winScale = Instance.new('UIScale')
-            _winScale.Scale = 0.92
+            _winScale.Scale = 0.88
             _winScale.Parent = v.Root
-            pcall(function() v.Root.GroupTransparency = 1 end)
             task.delay(0.05, function()
                 pcall(function()
                     _winTs:Create(_winScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-                    _winTs:Create(v.Root, TweenInfo.new(0.3, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
                 end)
             end)
 
             function v.Minimize(M)
-
                 if v._customMinimize then
                     v._customMinimize()
                     return
@@ -2988,30 +2988,22 @@ local aa = {
                 v.Minimized = not v.Minimized
 
                 if v.Minimized then
-                    -- Shrink + fade out
                     pcall(function()
-                        _winTs:Create(_winScale, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Scale = 0.92 }):Play()
-                        local _ft = _winTs:Create(v.Root, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { GroupTransparency = 1 })
-                        _ft.Completed:Connect(function() v.Root.Visible = false end)
-                        _ft:Play()
+                        _winTs:Create(_winScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
                     end)
-                    if not pcall(function() return v.Root.GroupTransparency end) then
+                    task.delay(0.18, function()
                         v.Root.Visible = false
-                    end
+                    end)
                 else
-                    -- Reveal + scale back up
                     v.Root.Visible = true
                     pcall(function()
                         _winTs:Create(_winScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-                        _winTs:Create(v.Root, TweenInfo.new(0.28, Enum.EasingStyle.Quint), { GroupTransparency = 0 }):Play()
                     end)
                 end
 
                 if not C then
                     C = true
-
                     local N = u.MinimizeKeybind and u.MinimizeKeybind.Value or u.MinimizeKey.Name
-
                     u:Notify{
                         Title = 'Interface',
                         Content = 'Press ' .. N .. ' to toggle the inteface.',
@@ -4645,7 +4637,7 @@ local aa = {
                 _drag = false
                 if _conn then _conn:Disconnect(); _conn = nil end
                 _ts:Create(tScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1 }):Play()
-                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0, BackgroundColor3 = Color3.new(1, 1, 1) }):Play()
+                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0 }):Play()
             end
 
             local function _apply(screenX)
@@ -4660,7 +4652,7 @@ local aa = {
             local function _begin(inp)
                 _drag = true
                 _ts:Create(tScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.35 }):Play()
-                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0.55, BackgroundColor3 = Color3.fromRGB(52, 199, 89) }):Play()
+                _ts:Create(thumb, TweenInfo.new(0.15), { BackgroundTransparency = 0.3 }):Play()
                 local isTouch = inp.UserInputType == Enum.UserInputType.Touch
                 if _conn then _conn:Disconnect() end
                 _conn = _rs.RenderStepped:Connect(function()
@@ -4782,7 +4774,6 @@ local aa = {
                 local _greyOff = Color3.fromRGB(80, 80, 100)
                 af:Create(j, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                     Position = UDim2.new(0, h.Value and ON_X or OFF_X, 0.5, 0),
-                    BackgroundColor3 = h.Value and _greenOn or Color3.new(1, 1, 1),
                 }):Play()
                 af:Create(l, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                     BackgroundTransparency = h.Value and 0 or 1,
@@ -4803,16 +4794,23 @@ local aa = {
                 if inp.UserInputType ~= Enum.UserInputType.MouseButton1
                 and inp.UserInputType ~= Enum.UserInputType.Touch then return end
                 _drag = true; _moved = false
+                local _sy = inp.Position.Y
                 _sx = inp.Position.X; _tx0 = j.Position.X.Offset
                 af:Create(tScale, TweenInfo.new(0.2, Enum.EasingStyle.Quint), { Scale = 1.25 }):Play()
-                af:Create(j, TweenInfo.new(0.15), { BackgroundTransparency = 0.55 }):Play()
+                af:Create(j, TweenInfo.new(0.15), { BackgroundTransparency = 0.3 }):Play()
                 if _dc then _dc:Disconnect() end
                 if _ec then _ec:Disconnect() end
+                local _scrollCancelled = false
                 _dc = _uis.InputChanged:Connect(function(mv)
                     if not _drag then return end
                     if mv.UserInputType ~= Enum.UserInputType.MouseMovement
                     and mv.UserInputType ~= Enum.UserInputType.Touch then return end
                     local dx = mv.Position.X - _sx
+                    local dy = mv.Position.Y - _sy
+                    -- if scrolling vertically more than horizontally, cancel
+                    if math.abs(dy) > math.abs(dx) and math.abs(dy) > 6 then
+                        _scrollCancelled = true
+                    end
                     if math.abs(dx) > 4 then _moved = true end
                     j.Position = UDim2.new(0, math.clamp(_tx0 + dx, OFF_X, ON_X), 0.5, 0)
                     l.BackgroundTransparency = 1 - (j.Position.X.Offset - OFF_X) / (ON_X - OFF_X)
@@ -4825,7 +4823,11 @@ local aa = {
                     af:Create(j, TweenInfo.new(0.15), { BackgroundTransparency = 0 }):Play()
                     if _dc then _dc:Disconnect(); _dc = nil end
                     if _ec then _ec:Disconnect(); _ec = nil end
-                    if not _moved then
+                    if _scrollCancelled then
+                        -- revert position without toggling
+                        h:SetValue(h.Value, nil, true)
+                        _scrollCancelled = false
+                    elseif not _moved then
                         h:SetValue(not h.Value)
                     else
                         h:SetValue(j.Position.X.Offset + 13 > 10)
