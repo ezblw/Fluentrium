@@ -1772,13 +1772,6 @@ local aa = {
                     Color = 'ElementBorder',
                 },
             })
-            -- Animated accent outline - always on, inverted gradient direction vs background
-            q.AccentBorder = k('UIStroke', {
-                Transparency = 0.25,
-                Thickness = 1.5,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                Color = Color3.fromRGB(200, 200, 220),
-            })
             q.Frame = k('TextButton', {
                 Size = UDim2.new(1, 0, 0, 0),
                 BackgroundTransparency = 0.89,
@@ -1796,7 +1789,6 @@ local aa = {
                     CornerRadius = UDim.new(0, 12),
                 }),
                 q.Border,
-                q.AccentBorder,
                 q.LabelHolder,
             })
 
@@ -1829,24 +1821,6 @@ local aa = {
                 local _elScale = Instance.new('UIScale')
                 _elScale.Scale = 1
                 _elScale.Parent = q.Frame
-
-                -- Always-on inverted gradient stroke animation
-                local _strokeConn = _elRs.Heartbeat:Connect(function()
-                    pcall(function()
-                        if not q.AccentBorder or not q.AccentBorder.Parent then return end
-                        local _gc = _G.__gradColors
-                        local _gt = _G.__gradT or 0
-                        if _gc then
-                            local alpha = (math.sin(-_gt * math.pi / 180 * 1.5) + 1) / 2
-                            q.AccentBorder.Color = _gc.primary:lerp(_gc.secondary, alpha)
-                        end
-                    end)
-                end)
-                q.Frame.AncestryChanged:Connect(function()
-                    if not q.Frame.Parent then
-                        pcall(function() _strokeConn:Disconnect() end)
-                    end
-                end)
 
                 -- Tooltip system - show after 0.65s if element has description
                 local _tipThread = nil
@@ -1903,7 +1877,6 @@ local aa = {
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
                     pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.3 }):Play() end)
-                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.15), { Transparency = 0.1 }):Play() end)
                     if n and n ~= '' then
                         _tipThread = task.delay(0.65, _showTooltip)
                     end
@@ -1912,13 +1885,11 @@ local aa = {
                     t(j.GetThemeProperty'ElementTransparency')
                     _elTs:Create(_elScale, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
                     pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.22), { Transparency = 0.5 }):Play() end)
-                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.22), { Transparency = 0.25 }):Play() end)
                     _hideTooltip()
                 end)
                 j.AddSignal(q.Frame.MouseButton1Down, function()
                     t(j.GetThemeProperty'ElementTransparency' + j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.1, Enum.EasingStyle.Quint), { Scale = 0.985 }):Play()
-                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.08), { Transparency = 0.05 }):Play() end)
                     _hideTooltip()
                 end)
                 j.AddSignal(q.Frame.MouseButton1Up, function()
@@ -2211,46 +2182,168 @@ local aa = {
         local h = d.Parent.Parent
         local i = e(h.Creator)
         local j = i.New
+        local _sTs = game:GetService('TweenService')
+        local _sRs = game:GetService('RunService')
 
         return function(k, l)
             local m = {}
+            local _collapsed = false
+            local _contentH = 0
 
             m.Layout = j('UIListLayout', {
                 Padding = UDim.new(0, 5),
             })
             m.Container = j('Frame', {
                 Size = UDim2.new(1, 0, 0, 26),
-                Position = UDim2.fromOffset(0, 24),
+                Position = UDim2.fromOffset(0, 30),
                 BackgroundTransparency = 1,
+                ClipsDescendants = true,
             }, {
                 m.Layout,
             })
+
+            -- Gradient underline bar under section title
+            local _gradLine = j('Frame', {
+                Size = UDim2.new(0, 0, 0, 2),
+                Position = UDim2.fromOffset(0, 22),
+                BackgroundTransparency = 0,
+                BackgroundColor3 = Color3.fromRGB(120, 120, 180),
+                BorderSizePixel = 0,
+            }, {
+                j('UICorner', { CornerRadius = UDim.new(1, 0) }),
+                j('UIGradient', {
+                    Name = 'SectionGrad',
+                    Rotation = 0,
+                }),
+            })
+
+            -- Collapse arrow indicator
+            local _arrow = j('TextLabel', {
+                Text = '▾',
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
+                TextSize = 12,
+                TextTransparency = 0.3,
+                BackgroundTransparency = 1,
+                Size = UDim2.fromOffset(16, 18),
+                Position = UDim2.new(1, -2, 0, 2),
+                AnchorPoint = Vector2.new(1, 0),
+                TextXAlignment = Enum.TextXAlignment.Center,
+                ThemeTag = { TextColor3 = 'Text' },
+            })
+
+            -- Header button (clicking collapses)
+            local _header = j('TextButton', {
+                Size = UDim2.new(1, 0, 0, 22),
+                BackgroundTransparency = 1,
+                Text = '',
+                ZIndex = 2,
+            })
+
+            -- Title label
+            local _title = j('TextLabel', {
+                RichText = true,
+                Text = k,
+                TextTransparency = 0,
+                FontFace = Font.fromEnum(Enum.Font.GothamBold),
+                TextSize = 12,
+                TextXAlignment = 'Left',
+                TextYAlignment = 'Center',
+                Size = UDim2.new(1, -20, 0, 18),
+                Position = UDim2.fromOffset(0, 2),
+                BackgroundTransparency = 1,
+                ThemeTag = { TextColor3 = 'Text' },
+            })
+
             m.Root = j('Frame', {
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 0, 26),
                 LayoutOrder = 7,
                 Parent = l,
             }, {
-                j('TextLabel', {
-                    RichText = true,
-                    Text = k,
-                    TextTransparency = 0,
-                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
-                    TextSize = 18,
-                    TextXAlignment = 'Left',
-                    TextYAlignment = 'Center',
-                    Size = UDim2.new(1, -16, 0, 18),
-                    Position = UDim2.fromOffset(0, 2),
-                    ThemeTag = {
-                        TextColor3 = 'Text',
-                    },
-                }),
+                _title,
+                _arrow,
+                _gradLine,
+                _header,
                 m.Container,
             })
 
+            -- Animate gradient line to full width on first layout
+            task.defer(function()
+                pcall(function()
+                    local _gc = _G.__gradColors
+                    local _gradUi = _gradLine:FindFirstChild('SectionGrad')
+                    if _gc and _gradUi then
+                        local _lc = _G.__lerpColor or function(a,b,t) return a:lerp(b,t) end
+                        _gradUi.Color = ColorSequence.new({
+                            ColorSequenceKeypoint.new(0, _gc.primary),
+                            ColorSequenceKeypoint.new(0.5, _lc(_gc.primary, _gc.secondary, 0.5)),
+                            ColorSequenceKeypoint.new(1, _gc.secondary),
+                        })
+                        -- Animate gradient line width in
+                        _sTs:Create(_gradLine, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(1, 0, 0, 2),
+                        }):Play()
+                        -- Animate gradient rotation from global time (inverted)
+                        _sRs.Heartbeat:Connect(function()
+                            pcall(function()
+                                if not _gradLine.Parent then return end
+                                local _gt = _G.__gradT or 0
+                                _gradUi.Rotation = (-_gt * 0.8) % 360
+                            end)
+                        end)
+                    else
+                        _sTs:Create(_gradLine, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(1, 0, 0, 2),
+                        }):Play()
+                    end
+                end)
+            end)
+
+            -- Collapse / expand logic
+            local function _toggleCollapse()
+                _collapsed = not _collapsed
+                local _targetArrow = _collapsed and '▸' or '▾'
+                _sTs:Create(_arrow, TweenInfo.new(0.2), { TextTransparency = 0.15 }):Play()
+                task.delay(0.1, function()
+                    _arrow.Text = _targetArrow
+                    _sTs:Create(_arrow, TweenInfo.new(0.2), { TextTransparency = 0.3 }):Play()
+                end)
+                if _collapsed then
+                    _contentH = m.Container.AbsoluteSize.Y
+                    _sTs:Create(m.Container, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, 0),
+                    }):Play()
+                    _sTs:Create(m.Root, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, 28),
+                    }):Play()
+                else
+                    local _target = math.max(_contentH, m.Layout.AbsoluteContentSize.Y)
+                    _sTs:Create(m.Container, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, _target),
+                    }):Play()
+                    _sTs:Create(m.Root, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, _target + 28),
+                    }):Play()
+                end
+                -- pulse the gradient line on toggle
+                _sTs:Create(_gradLine, TweenInfo.new(0.12), { BackgroundTransparency = 0.5 }):Play()
+                task.delay(0.12, function()
+                    _sTs:Create(_gradLine, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
+                end)
+            end
+
+            i.AddSignal(_header.MouseButton1Click, _toggleCollapse)
+            i.AddSignal(_header.MouseEnter, function()
+                _sTs:Create(_arrow, TweenInfo.new(0.15), { TextTransparency = 0.05 }):Play()
+            end)
+            i.AddSignal(_header.MouseLeave, function()
+                _sTs:Create(_arrow, TweenInfo.new(0.2), { TextTransparency = 0.3 }):Play()
+            end)
+
             i.AddSignal(m.Layout:GetPropertyChangedSignal'AbsoluteContentSize', function()
+                if _collapsed then return end
                 m.Container.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y)
-                m.Root.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y + 25)
+                m.Root.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y + 28)
             end)
 
             return m
@@ -3339,69 +3432,6 @@ local aa = {
             v.Root.AncestryChanged:Connect(function()
                 if not v.Root.Parent then pcall(function() _glowConn:Disconnect() end) end
             end)
-
-            -- Search bar at top of tab panel
-            local _searchBar = s('Frame', {
-                Size = UDim2.new(0, t.TabWidth, 0, 28),
-                Position = UDim2.new(0, 12, 0, 52),
-                BackgroundTransparency = 0.85,
-                ZIndex = 5,
-                ThemeTag = { BackgroundColor3 = 'Element' },
-                Parent = v.Root,
-            }, {
-                s('UICorner', { CornerRadius = UDim.new(0, 8) }),
-                s('UIStroke', {
-                    Thickness = 1,
-                    Transparency = 0.6,
-                    ThemeTag = { Color = 'ElementBorder' },
-                }),
-                s('ImageLabel', {
-                    Size = UDim2.fromOffset(12, 12),
-                    Position = UDim2.fromOffset(8, 8),
-                    BackgroundTransparency = 1,
-                    Image = 'rbxassetid://10734943674', -- lucide-search
-                    ImageTransparency = 0.4,
-                    ThemeTag = { ImageColor3 = 'Text' },
-                }),
-                s('TextBox', {
-                    Name = 'SearchInput',
-                    Size = UDim2.new(1, -28, 1, 0),
-                    Position = UDim2.fromOffset(24, 0),
-                    BackgroundTransparency = 1,
-                    PlaceholderText = 'Search...',
-                    Text = '',
-                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
-                    TextSize = 11,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    ClearTextOnFocus = false,
-                    ZIndex = 6,
-                    ThemeTag = { TextColor3 = 'Text', PlaceholderColor3 = 'SubText' },
-                }),
-            })
-
-            -- Wire search to filter tab buttons
-            local _searchInput = _searchBar:FindFirstChild('SearchInput')
-            if _searchInput then
-                _searchInput:GetPropertyChangedSignal('Text'):Connect(function()
-                    local _q = _searchInput.Text:lower()
-                    for _, _tab in pairs(v.TabHolder:GetChildren()) do
-                        if _tab:IsA('TextButton') then
-                            local _lbl = _tab:FindFirstChildOfClass('TextLabel')
-                            if _lbl then
-                                local _match = _q == '' or _lbl.Text:lower():find(_q, 1, true)
-                                _tab.Visible = _match ~= nil
-                            end
-                        end
-                    end
-                end)
-            end
-
-            -- Adjust tab holder to start below search bar
-            local _tabF = v.Root:FindFirstChild('Frame')
-            if _tabF and _tabF.Position.Y.Offset == 54 then
-                _tabF.Position = UDim2.new(0, 12, 0, 86)
-                _tabF.Size = UDim2.new(0, t.TabWidth, 1, -174)
-            end
 
             function v.Minimize(M)
                 if v._customMinimize then
