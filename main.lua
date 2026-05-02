@@ -729,6 +729,8 @@ local aa = {
                         if D.MoveGradient then
                             local _rs = game:GetService('RunService')
                             local _gradT = 0
+                            _G.__gradT = 0
+                            _G.__gradColors = colors
                             local _gradConn
                             _gradConn = _rs.Heartbeat:Connect(function(dt)
                                 if not E.Root or not E.Root.Parent then
@@ -736,6 +738,7 @@ local aa = {
                                     return
                                 end
                                 _gradT = _gradT + dt * 65 -- degrees per second
+                                _G.__gradT = _gradT
                                 local rot = (_gradT % 360)
                                 pcall(function() outerGrad.Rotation = rot end)
                                 -- also animate the window border stroke color
@@ -1769,12 +1772,12 @@ local aa = {
                     Color = 'ElementBorder',
                 },
             })
-            -- Animated accent outline (second stroke, invisible by default)
+            -- Animated accent outline - always on, inverted gradient direction vs background
             q.AccentBorder = k('UIStroke', {
-                Transparency = 1,
+                Transparency = 0.25,
                 Thickness = 1.5,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                ThemeTag = { Color = 'Accent' },
+                Color = Color3.fromRGB(200, 200, 220),
             })
             q.Frame = k('TextButton', {
                 Size = UDim2.new(1, 0, 0, 0),
@@ -1826,54 +1829,97 @@ local aa = {
                 local _elScale = Instance.new('UIScale')
                 _elScale.Scale = 1
                 _elScale.Parent = q.Frame
-                local _accentConn = nil
-                local _accentT = 0
+
+                -- Always-on inverted gradient stroke animation
+                local _strokeConn = _elRs.Heartbeat:Connect(function()
+                    pcall(function()
+                        if not q.AccentBorder or not q.AccentBorder.Parent then return end
+                        local _gc = _G.__gradColors
+                        local _gt = _G.__gradT or 0
+                        if _gc then
+                            local alpha = (math.sin(-_gt * math.pi / 180 * 1.5) + 1) / 2
+                            q.AccentBorder.Color = _gc.primary:lerp(_gc.secondary, alpha)
+                        end
+                    end)
+                end)
+                q.Frame.AncestryChanged:Connect(function()
+                    if not q.Frame.Parent then
+                        pcall(function() _strokeConn:Disconnect() end)
+                    end
+                end)
+
+                -- Tooltip system - show after 0.65s if element has description
+                local _tipThread = nil
+                local _tipFrame = nil
+                local function _showTooltip()
+                    if not n or n == '' then return end
+                    pcall(function()
+                        if _tipFrame then _tipFrame:Destroy() end
+                        local _uis = game:GetService('UserInputService')
+                        local _mouse = _uis:GetMouseLocation()
+                        local _sg = Instance.new('ScreenGui')
+                        _sg.ResetOnSpawn = false
+                        _sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                        _sg.DisplayOrder = 999
+                        pcall(function() _sg.Parent = game:GetService('CoreGui') end)
+                        local _tf = Instance.new('Frame', _sg)
+                        _tf.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+                        _tf.BackgroundTransparency = 0.1
+                        _tf.BorderSizePixel = 0
+                        _tf.Size = UDim2.fromOffset(180, 32)
+                        _tf.Position = UDim2.fromOffset(_mouse.X + 14, _mouse.Y - 16)
+                        _tf.ZIndex = 100
+                        Instance.new('UICorner', _tf).CornerRadius = UDim.new(0, 8)
+                        local _ts2 = Instance.new('UIStroke', _tf)
+                        _ts2.Thickness = 1
+                        _ts2.Transparency = 0.4
+                        local _gc = _G.__gradColors
+                        if _gc then _ts2.Color = _gc.secondary end
+                        local _tl = Instance.new('TextLabel', _tf)
+                        _tl.Text = n
+                        _tl.FontFace = Font.fromEnum(Enum.Font.GothamBold)
+                        _tl.TextSize = 11
+                        _tl.TextColor3 = Color3.fromRGB(220, 220, 220)
+                        _tl.BackgroundTransparency = 1
+                        _tl.Size = UDim2.new(1, -12, 1, 0)
+                        _tl.Position = UDim2.fromOffset(6, 0)
+                        _tl.TextXAlignment = Enum.TextXAlignment.Left
+                        _tl.TextWrapped = true
+                        _tf.BackgroundTransparency = 1
+                        _elTs:Create(_tf, TweenInfo.new(0.15, Enum.EasingStyle.Quint), { BackgroundTransparency = 0.1 }):Play()
+                        _tipFrame = _sg
+                    end)
+                end
+                local function _hideTooltip()
+                    if _tipThread then task.cancel(_tipThread) _tipThread = nil end
+                    if _tipFrame then
+                        local _f = _tipFrame
+                        task.delay(0.1, function() pcall(function() _f:Destroy() end) end)
+                        _tipFrame = nil
+                    end
+                end
 
                 j.AddSignal(q.Frame.MouseEnter, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1.012 }):Play()
                     pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.18), { Transparency = 0.3 }):Play() end)
-                    -- extract both gradient colors from the selected color pair
-                    if _accentConn then _accentConn:Disconnect() end
-                    _accentT = 0
-                    local _c1, _c2
-                    pcall(function()
-                        local seq = j.GetThemeProperty('AcrylicGradient')
-                        if seq and seq.Keypoints then
-                            _c1 = seq.Keypoints[1].Value
-                            _c2 = seq.Keypoints[#seq.Keypoints].Value
-                        end
-                    end)
-                    _c1 = _c1 or j.GetThemeProperty('Accent') or Color3.fromRGB(76, 194, 255)
-                    _c2 = _c2 or Color3.fromRGB(255, 255, 255)
-                    pcall(function()
-                        q.AccentBorder.Color = _c1
-                        q.AccentBorder.Transparency = 0.15
-                    end)
-                    _accentConn = _elRs.Heartbeat:Connect(function(dt)
-                        _accentT = _accentT + dt * 1.8
-                        -- smooth cycle between primary and secondary gradient colors
-                        local alpha = (math.sin(_accentT) + 1) / 2
-                        local col = _c1:lerp(_c2, alpha)
-                        local pulse = 0.1 + math.abs(math.sin(_accentT * 0.9)) * 0.2
-                        pcall(function()
-                            q.AccentBorder.Color = col
-                            q.AccentBorder.Transparency = pulse
-                        end)
-                    end)
+                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.15), { Transparency = 0.1 }):Play() end)
+                    if n and n ~= '' then
+                        _tipThread = task.delay(0.65, _showTooltip)
+                    end
                 end)
                 j.AddSignal(q.Frame.MouseLeave, function()
                     t(j.GetThemeProperty'ElementTransparency')
                     _elTs:Create(_elScale, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play()
                     pcall(function() _elTs:Create(q.Border, TweenInfo.new(0.22), { Transparency = 0.5 }):Play() end)
-                    -- stop pulse and fade out accent border
-                    if _accentConn then _accentConn:Disconnect(); _accentConn = nil end
-                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.25), { Transparency = 1 }):Play() end)
+                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.22), { Transparency = 0.25 }):Play() end)
+                    _hideTooltip()
                 end)
                 j.AddSignal(q.Frame.MouseButton1Down, function()
                     t(j.GetThemeProperty'ElementTransparency' + j.GetThemeProperty'HoverChange')
                     _elTs:Create(_elScale, TweenInfo.new(0.1, Enum.EasingStyle.Quint), { Scale = 0.985 }):Play()
-                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.08), { Transparency = 0.1 }):Play() end)
+                    pcall(function() _elTs:Create(q.AccentBorder, TweenInfo.new(0.08), { Transparency = 0.05 }):Play() end)
+                    _hideTooltip()
                 end)
                 j.AddSignal(q.Frame.MouseButton1Up, function()
                     t(j.GetThemeProperty'ElementTransparency' - j.GetThemeProperty'HoverChange')
@@ -2066,19 +2112,19 @@ local aa = {
 
             r:Open()
 
+            -- Enhanced notification: gradient border + progress bar + better animations
             task.defer(function()
                 pcall(function()
+                    local _nTs = game:GetService('TweenService')
+                    local _nRs = game:GetService('RunService')
                     local nColors = _G.__gradColors
                     local nLerp   = _G.__lerpColor
                     if nColors and nLerp and r.AcrylicPaint and r.AcrylicPaint.Frame then
                         local npaint = r.AcrylicPaint.Frame
-
                         npaint.BackgroundTransparency = 0.35
                         npaint.BackgroundColor3 = nColors.primary
-
                         local eg = npaint:FindFirstChildWhichIsA('UIGradient')
                         if eg then eg:Destroy() end
-
                         local ng = Instance.new('UIGradient', npaint)
                         local p1,p2 = nColors.primary, nColors.secondary
                         ng.Color = ColorSequence.new({
@@ -2092,7 +2138,6 @@ local aa = {
                             ColorSequenceKeypoint.new(1,    p1),
                         })
                         ng.Rotation = 135
-
                         for _, child in ipairs(npaint:GetChildren()) do
                             if child:IsA('Frame') then
                                 child.BackgroundTransparency = 1
@@ -2103,21 +2148,52 @@ local aa = {
                                 child.BackgroundTransparency = 1
                             end
                         end
-
                         local ov = Instance.new('Frame', npaint)
                         ov.Size = UDim2.fromScale(1,1)
                         ov.BackgroundColor3 = Color3.new(0,0,0)
                         ov.BackgroundTransparency = 0.6
                         ov.BorderSizePixel = 0
                         Instance.new('UICorner', ov).CornerRadius = UDim.new(0, 12)
-
+                        -- Animated gradient border stroke
                         local ns = Instance.new('UIStroke', npaint)
-                        ns.Thickness = 1.2
+                        ns.Thickness = 1.5
                         ns.Color = nColors.secondary
-                        ns.Transparency = 0.3
+                        ns.Transparency = 0.1
+                        -- Rotating gradient on notification
+                        local _ngt = 0
+                        local _ngConn = _nRs.Heartbeat:Connect(function(dt)
+                            if not npaint or not npaint.Parent then return end
+                            _ngt = _ngt + dt * 80
+                            pcall(function()
+                                ng.Rotation = _ngt % 360
+                                local alpha = (math.sin(-_ngt * math.pi / 180 * 1.5) + 1) / 2
+                                ns.Color = p1:lerp(p2, alpha)
+                            end)
+                        end)
+                        -- Progress bar at bottom showing time remaining
+                        if q.Duration then
+                            local _pbar = Instance.new('Frame', npaint)
+                            _pbar.Size = UDim2.new(1, -4, 0, 3)
+                            _pbar.Position = UDim2.new(0, 2, 1, -5)
+                            _pbar.AnchorPoint = Vector2.new(0, 1)
+                            _pbar.BackgroundColor3 = p2
+                            _pbar.BackgroundTransparency = 0.2
+                            _pbar.BorderSizePixel = 0
+                            local _pbarCorner = Instance.new('UICorner', _pbar)
+                            _pbarCorner.CornerRadius = UDim.new(1, 0)
+                            _nTs:Create(_pbar, TweenInfo.new(q.Duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 0, 3) }):Play()
+                        end
+                        -- store conn for cleanup
+                        r._ngConn = _ngConn
                     end
                 end)
             end)
+            -- cleanup gradient conn when closed
+            local _origClose = r.Close
+            r.Close = function(...)
+                pcall(function() if r._ngConn then r._ngConn:Disconnect() end end)
+                return _origClose(...)
+            end
 
             if q.Duration then
                 task.delay(q.Duration, function()
@@ -2408,7 +2484,17 @@ local aa = {
                     v.Visible = false
                 end
 
-                o.Containers[q].Visible = true
+                -- Slide new content in from right
+                local _newCont = o.Containers[q]
+                _newCont.Visible = true
+                local _cTs = game:GetService('TweenService')
+                pcall(function()
+                    _newCont.Position = UDim2.fromOffset(30, 0)
+                    _newCont.BackgroundTransparency = 1
+                    _cTs:Create(_newCont, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Position = UDim2.fromOffset(0, 0),
+                    }):Play()
+                end)
 
                 r.ContainerPosMotor:setGoal(l(94, {frequency = 5}))
                 r.ContainerBackMotor:setGoal(l(0, {frequency = 8}))
@@ -3196,6 +3282,127 @@ local aa = {
                 end)
             end)
 
+            -- Cursor glow: soft radial that follows mouse inside the window
+            local _glowFrame = s('Frame', {
+                Size = UDim2.fromOffset(220, 220),
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                BackgroundTransparency = 1,
+                ZIndex = 0,
+                ClipsDescendants = false,
+                Parent = v.Root,
+            }, {
+                s('ImageLabel', {
+                    Size = UDim2.fromScale(1, 1),
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    Position = UDim2.fromScale(0.5, 0.5),
+                    BackgroundTransparency = 1,
+                    Image = 'rbxassetid://7927140919',
+                    ImageTransparency = 0.92,
+                    ZIndex = 0,
+                }),
+            })
+            local _glowRs = game:GetService('RunService')
+            local _glowUis = game:GetService('UserInputService')
+            local _glowTs = game:GetService('TweenService')
+            local _glowTargX, _glowTargY = 0, 0
+            local _glowCurX, _glowCurY = 0, 0
+            local _glowConn = _glowRs.Heartbeat:Connect(function(dt)
+                pcall(function()
+                    if not v.Root or not v.Root.Parent then return end
+                    local _mp = _glowUis:GetMouseLocation()
+                    local _rp = v.Root.AbsolutePosition
+                    local _rs2 = v.Root.AbsoluteSize
+                    local _lx = _mp.X - _rp.X
+                    local _ly = _mp.Y - _rp.Y
+                    -- only show glow when mouse is inside window
+                    local _inside = _lx >= 0 and _lx <= _rs2.X and _ly >= 0 and _ly <= _rs2.Y
+                    local _icon = _glowFrame:FindFirstChildOfClass('ImageLabel')
+                    if _inside then
+                        _glowTargX = _lx
+                        _glowTargY = _ly
+                        local _a = 1 - (0.05 ^ dt)
+                        _glowCurX = _glowCurX + (_glowTargX - _glowCurX) * _a
+                        _glowCurY = _glowCurY + (_glowTargY - _glowCurY) * _a
+                        _glowFrame.Position = UDim2.fromOffset(_glowCurX, _glowCurY)
+                        if _icon then _icon.ImageTransparency = 0.88 end
+                        -- tint glow to gradient colors
+                        local _gc = _G.__gradColors
+                        if _gc and _G.__gradT then
+                            local _alpha = (math.sin(_G.__gradT * math.pi / 180) + 1) / 2
+                            if _icon then _icon.ImageColor3 = _gc.primary:lerp(_gc.secondary, _alpha) end
+                        end
+                    else
+                        if _icon then _icon.ImageTransparency = 1 end
+                    end
+                end)
+            end)
+            v.Root.AncestryChanged:Connect(function()
+                if not v.Root.Parent then pcall(function() _glowConn:Disconnect() end) end
+            end)
+
+            -- Search bar at top of tab panel
+            local _searchBar = s('Frame', {
+                Size = UDim2.new(0, t.TabWidth, 0, 28),
+                Position = UDim2.new(0, 12, 0, 52),
+                BackgroundTransparency = 0.85,
+                ZIndex = 5,
+                ThemeTag = { BackgroundColor3 = 'Element' },
+                Parent = v.Root,
+            }, {
+                s('UICorner', { CornerRadius = UDim.new(0, 8) }),
+                s('UIStroke', {
+                    Thickness = 1,
+                    Transparency = 0.6,
+                    ThemeTag = { Color = 'ElementBorder' },
+                }),
+                s('ImageLabel', {
+                    Size = UDim2.fromOffset(12, 12),
+                    Position = UDim2.fromOffset(8, 8),
+                    BackgroundTransparency = 1,
+                    Image = 'rbxassetid://10734943674', -- lucide-search
+                    ImageTransparency = 0.4,
+                    ThemeTag = { ImageColor3 = 'Text' },
+                }),
+                s('TextBox', {
+                    Name = 'SearchInput',
+                    Size = UDim2.new(1, -28, 1, 0),
+                    Position = UDim2.fromOffset(24, 0),
+                    BackgroundTransparency = 1,
+                    PlaceholderText = 'Search...',
+                    Text = '',
+                    FontFace = Font.fromEnum(Enum.Font.GothamBold),
+                    TextSize = 11,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    ClearTextOnFocus = false,
+                    ZIndex = 6,
+                    ThemeTag = { TextColor3 = 'Text', PlaceholderColor3 = 'SubText' },
+                }),
+            })
+
+            -- Wire search to filter tab buttons
+            local _searchInput = _searchBar:FindFirstChild('SearchInput')
+            if _searchInput then
+                _searchInput:GetPropertyChangedSignal('Text'):Connect(function()
+                    local _q = _searchInput.Text:lower()
+                    for _, _tab in pairs(v.TabHolder:GetChildren()) do
+                        if _tab:IsA('TextButton') then
+                            local _lbl = _tab:FindFirstChildOfClass('TextLabel')
+                            if _lbl then
+                                local _match = _q == '' or _lbl.Text:lower():find(_q, 1, true)
+                                _tab.Visible = _match ~= nil
+                            end
+                        end
+                    end
+                end)
+            end
+
+            -- Adjust tab holder to start below search bar
+            local _tabF = v.Root:FindFirstChild('Frame')
+            if _tabF and _tabF.Position.Y.Offset == 54 then
+                _tabF.Position = UDim2.new(0, 12, 0, 86)
+                _tabF.Size = UDim2.new(0, t.TabWidth, 1, -174)
+            end
+
             function v.Minimize(M)
                 if v._customMinimize then
                     v._customMinimize()
@@ -3514,6 +3721,29 @@ local aa = {
 
             i.AddSignal(o.Frame.MouseButton1Click, function()
                 m.Library:SafeCallback(n.Callback)
+                -- Ripple effect from click center
+                pcall(function()
+                    local _rTs = game:GetService('TweenService')
+                    local _ripple = Instance.new('Frame')
+                    _ripple.Size = UDim2.fromOffset(0, 0)
+                    _ripple.AnchorPoint = Vector2.new(0.5, 0.5)
+                    _ripple.Position = UDim2.fromScale(0.5, 0.5)
+                    _ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    _ripple.BackgroundTransparency = 0.7
+                    _ripple.BorderSizePixel = 0
+                    _ripple.ZIndex = 10
+                    _ripple.Parent = o.Frame
+                    Instance.new('UICorner', _ripple).CornerRadius = UDim.new(1, 0)
+                    local _gc = _G.__gradColors
+                    if _gc then _ripple.BackgroundColor3 = _gc.secondary end
+                    local _sz = math.max(o.Frame.AbsoluteSize.X, o.Frame.AbsoluteSize.Y) * 2.2
+                    local _t1 = _rTs:Create(_ripple, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Size = UDim2.fromOffset(_sz, _sz),
+                        BackgroundTransparency = 1,
+                    })
+                    _t1.Completed:Connect(function() _ripple:Destroy() end)
+                    _t1:Play()
+                end)
             end)
 
             return o
